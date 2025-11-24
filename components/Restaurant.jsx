@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Restaurant() {
   return (
     <section className="py-16 px-6">
@@ -8,13 +10,15 @@ export default function Restaurant() {
         />
 
         <div>
-          <h2 className="text-3xl font-bold mb-4">Restauracja</h2>
+          <h2 className="text-3xl font-bold mb-4 font-headers">Restauracja</h2>
           <p className="text-gray-600 mb-6">
             Nasz szef kuchni przygotowuje dania inspirowane smakami regionu.
           </p>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-            Zobacz menu
+          <Link to="/restauracja">
+          <button className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+           Zobacz menu
           </button>
+          </Link>
         </div>
       </div>
     </section>

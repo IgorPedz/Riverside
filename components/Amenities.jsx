@@ -1,83 +1,118 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import axios from "axios";
 
 export default function Amenities() {
-  const items = [
-    {
-      name: "Basen kryty",
-      description:
-        "Nasz basen kryty jest przestronny, podgrzewany i dostępny przez cały rok. Idealny zarówno do relaksu, jak i aktywnego pływania. Dla dzieci przygotowaliśmy specjalną część z bezpieczną głębokością, a dla dorosłych strefę do pływania rekreacyjnego i treningowego.",
-      image: "../basen-pic-1.jpg",
-    },
-    {
-      name: "SPA",
-      description:
-        "Relaksujące SPA oferuje szeroką gamę zabiegów: masaże, saunę fińską, jacuzzi oraz aromaterapię. Nasze profesjonalne masażystki zadbają o Twój komfort i odprężenie, a strefa relaksu pozwoli na pełne odłączenie się od codziennego stresu.",
-      image: "../SPA-pic-2.jpg",
-    },
-    {
-      name: "Restauracja",
-      description:
-        "Nasza restauracja serwuje zarówno lokalne przysmaki, jak i dania kuchni międzynarodowej, przygotowywane ze świeżych, sezonowych składników. Goście mogą delektować się wykwintnymi potrawami w eleganckim, przytulnym wnętrzu z widokiem na ogród lub taras.",
-      image: "../Restaurant-pic-2.jpg",
-    },
-    {
-      name: "Parking",
-      description:
-        "Oferujemy przestronny parking dla naszych gości, dostępny 24/7, monitorowany i bezpieczny. Dzięki wygodnemu położeniu, możesz szybko dotrzeć do recepcji lub windy, a Twoje auto będzie zawsze pod opieką.",
-      image: "../Parking-pic-1.jpg",
-    },
-    {
-      name: "Wi-Fi",
-      description:
-        "Szybkie i stabilne Wi-Fi dostępne w całym hotelu pozwala na komfortową pracę zdalną, streaming filmów czy przeglądanie internetu. Niezależnie od tego, czy korzystasz z laptopa, tabletu czy smartfona, połączenie jest zawsze niezawodne.",
-      image: "../WiFi-pic-1.png",
-    },
-    {
-      name: "Siłownia",
-      description:
-        "Nowoczesna siłownia jest w pełni wyposażona w sprzęt cardio, wolne ciężary oraz maszyny do treningu siłowego i funkcjonalnego. Dla osób, które lubią indywidualne treningi, przygotowaliśmy plan ćwiczeń i porady naszych trenerów.",
-      image: "../Gym-pic-1.jpg",
-    },
-  ];
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [udogodnienia, setUdogodnienia] = useState([]);
+  const carouselRef = useRef(null);
 
-  const [selectedItem, setSelectedItem] = useState(null);
+  // Swipe support
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.changedTouches[0].screenX;
+  };
+
+  const handleTouchEnd = (e) => {
+    touchEndX.current = e.changedTouches[0].screenX;
+    handleSwipe();
+  };
+
+  const handleSwipe = () => {
+    const delta = touchStartX.current - touchEndX.current;
+    if (delta > 50) {
+      setSelectedIndex((prev) => (prev + 1) % udogodnienia.length);
+    } else if (delta < -50) {
+      setSelectedIndex((prev) => (prev - 1 + udogodnienia.length) % udogodnienia.length);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/udogodnienia");
+        setUdogodnienia(res.data);
+      } catch (err) {
+        console.error("Błąd pobierania danych:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (udogodnienia.length > 0)
+        setSelectedIndex((prev) => (prev + 1) % udogodnienia.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [udogodnienia.length]);
+
+  useEffect(() => {
+    if (!carouselRef.current || udogodnienia.length === 0) return;
+    const selectedCard = carouselRef.current.children[selectedIndex];
+    if (!selectedCard) return;
+
+    const carouselRect = carouselRef.current.getBoundingClientRect();
+    const cardRect = selectedCard.getBoundingClientRect();
+
+    const offset = cardRect.left - carouselRect.left - (carouselRect.width / 2 - cardRect.width / 2);
+
+    carouselRef.current.scrollBy({ left: offset, behavior: "smooth" });
+  }, [selectedIndex, udogodnienia]);
+
+  if (udogodnienia.length === 0) return <p>Ładowanie udogodnień...</p>;
 
   return (
     <section className="py-16 bg-gray-100">
-      <h2 className="text-xl font-bold text-center mb-8">Udogodnienia hotelu</h2>
+      <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-headers">
+        Udogodnienia hotelu
+      </h2>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-8 text-center">
-        {items.map((item) => (
-          <div
-            key={item.name}
-            className="text-lg font-medium p-6 bg-white hover:bg-gray-200 shadow rounded-lg cursor-pointer"
-            onClick={() => setSelectedItem(item)}
+      <motion.div
+        key={udogodnienia[selectedIndex].id}
+        className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden mb-12 flex flex-row items-center"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      >
+        <img
+          src={udogodnienia[selectedIndex].image}
+          alt={udogodnienia[selectedIndex].name}
+          className="w-full md:w-100 h-20 md:h-auto object-cover"
+        />
+        <div className="p-6 md:w-1/2 text-center md:text-left">
+          <h3 className="text-2xl font-bold mb-2">{udogodnienia[selectedIndex].name}</h3>
+          <p className="text-gray-700">{udogodnienia[selectedIndex].description}</p>
+        </div>
+      </motion.div>
+
+      <div
+        ref={carouselRef}
+        className="max-w-6xl mx-auto flex space-x-4 overflow-x-auto pb-4 px-15 no-scrollbar"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {udogodnienia.map((item, index) => (
+          <motion.div
+            key={item.id}
+            className={`flex-shrink-0 w-40 md:w-48 p-4 rounded-xl shadow-lg cursor-pointer text-center ${
+              index === selectedIndex ? "bg-white scale-105 shadow-2xl" : "bg-gray-200"
+            }`}
+            whileHover={{ scale: 1.08, boxShadow: "0px 15px 30px rgba(0,0,0,0.2)" }}
+            transition={{ type: "spring", stiffness: 300 }}
+            onClick={() => setSelectedIndex(index)}
           >
-            {item.name}
-          </div>
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-full h-24 object-cover rounded-lg mb-2"
+            />
+            <h4 className="font-semibold text-sm md:text-base">{item.name}</h4>
+          </motion.div>
         ))}
       </div>
-
-  {selectedItem && (
-    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
-      <div className="bg-white rounded-lg max-w-lg w-full p-6 relative">
-        <button
-          className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 font-bold text-xl"
-          onClick={() => setSelectedItem(null)}
-        >
-          &times;
-        </button>
-        <h3 className="text-2xl font-bold mb-4">{selectedItem.name}</h3>
-        <img
-          src={selectedItem.image}
-          alt={selectedItem.name}
-          className="w-full h-60 object-cover mb-4 rounded"
-        />
-        <p className="text-gray-700">{selectedItem.description}</p>
-      </div>
-    </div>
-  )}
-
     </section>
   );
 }

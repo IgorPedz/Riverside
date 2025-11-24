@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function About() {
   return (
     <section className="py-20 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
@@ -7,7 +9,7 @@ export default function About() {
       />
 
       <div>
-        <h2 className="text-3xl font-bold mb-4">Dlaczego warto wybrać nas?</h2>
+        <h2 className="text-3xl font-bold mb-4 font-headers">Dlaczego warto wybrać nas?</h2>
         <p className="text-gray-600 mb-6">
           Hotel Riverside to połączenie luksusu, komfortu i wyjątkowej lokalizacji otoczonej naturą.
         </p>
@@ -17,9 +19,11 @@ export default function About() {
           <li>🌿 Położenie wśród zieleni</li>
           <li>🛎 Recepcja 24/7</li>
         </ul>
-          <button className="mt-2 p-2 cursor-pointer bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 ">
-            Dowiedz się wiecej
+          <Link to="/o-nas">
+          <button className="mt-5 cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+           Dowiedz się wiecej
           </button>
+          </Link>
       </div>
     </section>
   );
