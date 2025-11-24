@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Allura&display=swap');
+
+@import "tailwindcss";
+
+@theme
+{
+    --font-display: "Allura","cursive";
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
