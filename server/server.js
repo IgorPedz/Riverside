@@ -1,40 +1,26 @@
 import express from "express";
 import mysql from "mysql2/promise";
-import cors from "cors"; 
+import cors from "cors";
 import bcrypt from "bcrypt";
 
 const app = express();
 const port = 3000;
 
-
-app.use(cors()); 
+app.use(cors());
 app.use(express.json());
-
 
 const dbConfig = {
   host: "localhost",
   user: "root",
   password: "",
-  database: "riverside"
+  database: "riverside",
 };
 
-app.get("/pokoje", async (req, res) => {
+//Pobieranie danych o wszystkich pokojach
+app.get("/rooms", async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute("SELECT * FROM pokoje");
-    await connection.end();
-    res.json(rows);
-  } catch (err) {
-    console.error("Błąd w /pokoje:", err); 
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-app.get("/uzytkownicy", async (req, res) => {
-  try {
-    const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute("SELECT * FROM uzytkownicy");
+    const [rows] = await connection.execute("SELECT * FROM rooms");
     await connection.end();
     res.json(rows);
   } catch (err) {
@@ -42,22 +28,58 @@ app.get("/uzytkownicy", async (req, res) => {
   }
 });
 
-app.get("/udogodnienia", async (req, res) => {
+//Pobieranie danych o 1 pokoju
+app.get("/api/rooms/:id", async (req, res) => {
+  const roomId = parseInt(req.params.id);
+  if (isNaN(roomId))
+    return res.status(400).json({ error: "Niepoprawne ID pokoju" });
+
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute("SELECT * FROM udogodnienia");
+    const [rows] = await connection.execute(
+      "SELECT * FROM rooms LEFT JOIN room_conditions ON rooms.id = room_conditions.room_id WHERE rooms.id = ?",
+      [roomId]
+    );
     await connection.end();
-    res.json(rows);
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Nie znaleziono pokoju" });
+
+    res.json(rows[0]);
   } catch (err) {
-    console.error("Błąd w /udogodnienia:", err); 
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get("/galeria", async (req, res) => {
+//Pobieranie danych o użytkownikach
+app.get("/users", async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute("SELECT * FROM galeria");
+    const [rows] = await connection.execute("SELECT * FROM users");
+    await connection.end();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//Pobieranie danych o udogodnieniach hotelu
+app.get("/Amenities", async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute("SELECT * FROM amenities");
+    await connection.end();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//Pobieranie zdjęć z galerii
+app.get("/gallery", async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute("SELECT * FROM gallery");
     await connection.end();
     res.json(rows);
   } catch (err) {
@@ -66,22 +88,25 @@ app.get("/galeria", async (req, res) => {
   }
 });
 
+//Pobieranie danych o spa
 app.get("/spa", async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
 
-    const [categories] = await connection.execute("SELECT * FROM spa_categories");
+    const [categories] = await connection.execute(
+      "SELECT * FROM spa_categories"
+    );
 
     const [items] = await connection.execute("SELECT * FROM spa_offer_items");
 
-    const result = categories.map(cat => ({
+    const result = categories.map((cat) => ({
       id: cat.id,
       title: cat.title,
       hours: cat.hours,
       img: cat.img,
       offer: items
-        .filter(item => item.category_id === cat.id)
-        .map(item => ({ name: item.name, price: item.price }))
+        .filter((item) => item.category_id === cat.id)
+        .map((item) => ({ name: item.name, price: item.price })),
     }));
 
     await connection.end();
@@ -93,6 +118,7 @@ app.get("/spa", async (req, res) => {
   }
 });
 
+//Pobieranie danych o menu
 app.get("/meals", async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -101,14 +127,14 @@ app.get("/meals", async (req, res) => {
 
     const [items] = await connection.execute("SELECT * FROM meal_items");
 
-    const result = meals.map(meal => ({
+    const result = meals.map((meal) => ({
       id: meal.id,
       name: meal.name,
       hours: meal.hours,
       img: meal.img,
       menu: items
-        .filter(item => item.meal_id === meal.id)
-        .map(item => ({ name: item.name, price: item.price }))
+        .filter((item) => item.meal_id === meal.id)
+        .map((item) => ({ name: item.name, price: item.price })),
     }));
 
     await connection.end();
@@ -120,6 +146,7 @@ app.get("/meals", async (req, res) => {
   }
 });
 
+//Rejestracja użytkownika
 app.post("/register", async (req, res) => {
   const { name, email, password, isAdmin } = req.body;
 
@@ -131,19 +158,21 @@ app.post("/register", async (req, res) => {
     const connection = await mysql.createConnection(dbConfig);
 
     const [existing] = await connection.execute(
-      "SELECT * FROM uzytkownicy WHERE email = ?",
+      "SELECT * FROM users WHERE email = ?",
       [email]
     );
 
     if (existing.length > 0) {
       await connection.end();
-      return res.status(409).json({ error: "Użytkownik o tym emailu już istnieje" });
+      return res
+        .status(409)
+        .json({ error: "Użytkownik o tym emailu już istnieje" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await connection.execute(
-      "INSERT INTO uzytkownicy (imie, email, haslo, is_admin) VALUES (?, ?, ?, ?)",
+      "INSERT INTO users (imie, email, haslo, is_admin) VALUES (?, ?, ?, ?)",
       [name, email, hashedPassword, isAdmin ? 1 : 0]
     );
 
@@ -156,13 +185,16 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// server.js
+//Logowanie użykownika
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute("SELECT * FROM uzytkownicy WHERE email = ?", [email]);
+    const [rows] = await connection.execute(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
 
     if (rows.length === 0) {
       return res.status(401).json({ error: "Niepoprawny email lub hasło" });
@@ -175,12 +207,11 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Niepoprawny email lub hasło" });
     }
 
-    // Zwracamy dane użytkownika (bez hasła!)
     res.json({
       id: user.id,
       name: user.imie,
       email: user.email,
-      isAdmin: user.is_admin
+      isAdmin: user.is_admin,
     });
 
     await connection.end();
@@ -190,7 +221,248 @@ app.post("/login", async (req, res) => {
   }
 });
 
+//Pobieranie informacji o pokoju
+app.get("/api/rooms", async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
 
+    const [rooms] = await connection.execute("SELECT * FROM rooms");
+
+    const [conditions] = await connection.execute(
+      "SELECT * FROM room_conditions"
+    );
+
+    const [reviews] = await connection.execute("SELECT * FROM room_reviews");
+
+    const roomsWithDetails = rooms.map((room) => {
+      const roomConditions = conditions.find((c) => c.room_id === room.id);
+      const roomReviews = reviews.filter((r) => r.room_id === room.id);
+
+      return {
+        ...room,
+        conditions: roomConditions
+          ? {
+              accessible: roomConditions.accessible === 1,
+              breakfast: roomConditions.breakfast === 1,
+              pets: roomConditions.pets === 1,
+              parking: roomConditions.parking === 1,
+            }
+          : {},
+        reviews: roomReviews.map((r) => ({
+          user: r.user_name,
+          comment: r.comment,
+        })),
+      };
+    });
+
+    //Pobieranie opinii
+    app.get("/api/:type/:id/reviews", async (req, res) => {
+      const { type, id } = req.params;
+
+      let tableName;
+      switch (type) {
+        case "rooms":
+          tableName = "room_reviews";
+          break;
+        case "spa":
+          tableName = "spa_reviews";
+          break;
+        case "restaurant":
+          tableName = "restaurant_reviews";
+          break;
+        default:
+          return res.status(400).json({ message: "Niepoprawny typ" });
+      }
+
+      try {
+        const [rows] = await connection.execute(
+          `SELECT id, user_name as user, comment FROM ${tableName} WHERE ${type.slice(
+            0,
+            -1
+          )}_id = ?`,
+          [id]
+        );
+        res.json(rows); // <-- id musi tu być
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Błąd serwera" });
+      }
+    });
+
+    //Dodawanie opinii
+    app.post("/api/:type/:id/reviews", async (req, res) => {
+      const { type, id } = req.params;
+      const { user_name, comment } = req.body;
+
+      const connection = await mysql.createConnection(dbConfig);
+
+      if (!user_name || !comment) {
+        return res.status(400).json({ message: "Brak danych" });
+      }
+
+      try {
+        let tableName;
+        switch (type) {
+          case "rooms":
+            tableName = "room_reviews";
+            break;
+          case "spa":
+            tableName = "spa_reviews";
+            break;
+          case "restaurant":
+            tableName = "restaurant_reviews";
+            break;
+          default:
+            return res.status(400).json({ message: "Niepoprawny typ" });
+        }
+
+        const sql = `INSERT INTO ${tableName} (${type.slice(
+          0,
+          -1
+        )}_id, user_name, comment) VALUES (?, ?, ?)`;
+        await connection.execute(sql, [id, user_name, comment]);
+
+        res.status(201).json({ message: "Dodano opinię" });
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Błąd serwera" });
+      }
+    });
+
+    res.json(roomsWithDetails);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+//Edycja opinii
+app.put("/api/:type/:id/reviews/:reviewId", async (req, res) => {
+  const { type, id, reviewId } = req.params;
+  const { comment } = req.body;
+
+  const connection = await mysql.createConnection(dbConfig);
+
+  if (!comment) return res.status(400).json({ message: "Brak komentarza" });
+
+  try {
+    let tableName;
+    switch (type) {
+      case "rooms":
+        tableName = "room_reviews";
+        break;
+      case "spa":
+        tableName = "spa_reviews";
+        break;
+      case "restaurant":
+        tableName = "restaurant_reviews";
+        break;
+      default:
+        return res.status(400).json({ message: "Niepoprawny typ" });
+    }
+
+    const sql = `UPDATE ${tableName} SET comment = ? WHERE id = ? AND ${type.slice(
+      0,
+      -1
+    )}_id = ?`;
+    const [result] = await connection.execute(sql, [comment, reviewId, id]);
+
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: "Nie znaleziono opinii" });
+
+    res.json({ message: "Opinia zaktualizowana" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+// Usuwanie opinii
+app.delete("/api/:type/:id/reviews/:reviewId", async (req, res) => {
+  const { type, id, reviewId } = req.params;
+
+  const connection = await mysql.createConnection(dbConfig);
+
+  try {
+    let tableName;
+    switch (type) {
+      case "rooms":
+        tableName = "room_reviews";
+        break;
+      case "spa":
+        tableName = "spa_reviews";
+        break;
+      case "restaurant":
+        tableName = "restaurant_reviews";
+        break;
+      default:
+        return res.status(400).json({ message: "Niepoprawny typ" });
+    }
+
+    const sql = `DELETE FROM ${tableName} WHERE id = ? AND ${type.slice(
+      0,
+      -1
+    )}_id = ?`;
+    const [result] = await connection.execute(sql, [reviewId, id]);
+
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: "Nie znaleziono opinii" });
+
+    res.json({ message: "Opinia usunięta" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+//Pobieranie rezerwacji danego pokoju
+app.get("/api/rooms/:id/reservations", async (req, res) => {
+  const { id } = req.params;
+
+  const connection = await mysql.createConnection(dbConfig);
+  try {
+    const [rows] = await connection.execute(
+      `SELECT id, user_id, start_date, end_date, status
+       FROM reservations
+       WHERE room_id = ?`,
+      [id]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    await connection.end();
+  }
+});
+
+//Dodawanie rezerwacji
+app.post("/api/reservations", async (req, res) => {
+  const { roomId, userId, startDate, endDate, totalPrice, code } = req.body;
+
+  if (!roomId || !userId || !startDate || !endDate || !totalPrice) {
+    return res.status(400).json({ error: "Niekompletne dane rezerwacji" });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      `INSERT INTO reservations (room_id, user_id, start_date, end_date, total_price, reservationCode)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [roomId, userId, startDate, endDate, totalPrice, code]
+    );
+    await connection.end();
+
+    res.json({
+      message: "Rezerwacja zapisana",
+      reservationId: result.insertId,
+    });
+  } catch (err) {
+    console.error("Błąd przy zapisywaniu rezerwacji:", roomId, userId);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Serwer działa na http://localhost:${port}`);

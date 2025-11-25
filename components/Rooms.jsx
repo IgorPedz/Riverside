@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function RoomsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(1);
   const containerRef = useRef(null);
   const [pokoje, setPokoje] = useState([]);
+
+  const navigate = useNavigate();
 
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev - 1 + pokoje.length) % pokoje.length);
@@ -14,10 +17,16 @@ export default function RoomsCarousel() {
     setCurrentIndex((prev) => (prev + 1) % pokoje.length);
   };
 
+  const handleSeeMore = (room) => {
+    navigate("/oferty/noclegi", {
+      state: { roomId: room.id, openModal: true },
+    });
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/pokoje");
+        const res = await axios.get("http://localhost:3000/rooms");
         setPokoje(res.data);
       } catch (err) {
         console.error("Błąd pobierania danych:", err);
@@ -53,7 +62,9 @@ export default function RoomsCarousel() {
 
   return (
     <div className="relative w-full py-10 max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-10 font-headers">Noclegi</h2>
+      <h2 className="text-3xl font-bold text-center mb-10 font-headers">
+        Noclegi
+      </h2>
       <div
         ref={containerRef}
         className="flex overflow-x-auto gap-4 px-2 sm:px-4 no-scrollbar"
@@ -62,10 +73,12 @@ export default function RoomsCarousel() {
           const isActive = index === currentIndex;
           return (
             <div
-              key={room.id} 
-              className={`flex-shrink-0 rounded-xl shadow-lg transition-transform duration-500 ease-in-out
-                ${isActive ? "scale-105 opacity-100 z-10" : "scale-90 opacity-50 z-0"}
-              `}
+              key={room.id}
+              className={`flex-shrink-0 rounded-xl shadow-lg transition-transform duration-500 ease-in-out${
+                isActive
+                  ? "scale-105 opacity-100 z-10"
+                  : "scale-90 opacity-50 z-0"
+              }`}
               style={{ minWidth: "250px" }}
             >
               <img
@@ -75,8 +88,11 @@ export default function RoomsCarousel() {
               />
               <div className="p-4 text-center bg-white rounded-b-xl shadow-inner">
                 <h3 className="text-xl font-semibold">{room.name}</h3>
-                <p className="text-gray-500">{room.price}</p>
-                <button className="cursor-pointer mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                <p className="text-gray-500">{room.price} zł / noc</p>
+                <button
+                  onClick={() => handleSeeMore(room)}
+                  className="cursor-pointer mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
                   Zobacz szczegóły
                 </button>
               </div>

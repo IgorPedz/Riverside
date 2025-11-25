@@ -7,12 +7,11 @@ export default function Gallery() {
   const [images, setImages] = useState([]);
   const containerRef = useRef(null);
 
-  // Pobranie danych z backendu
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/galeria");
-        setImages(res.data); // oczekujemy np. [{id:1, url:"../hotel-pic-3.jpg"}, ...]
+        const res = await axios.get("http://localhost:3000/gallery");
+        setImages(res.data); 
       } catch (err) {
         console.error("Błąd pobierania galerii:", err);
       }
@@ -23,19 +22,22 @@ export default function Gallery() {
   const scroll = (direction) => {
     const el = containerRef.current;
     if (!el) return;
-    const amount = 320 * direction; // przesunięcie w px
+    const amount = 320 * direction; 
     el.scrollBy({ left: amount, behavior: "smooth" });
   };
 
-  if (images.length === 0) return <p className="text-center py-10">Ładowanie galerii...</p>;
+  if (images.length === 0)
+    return <p className="text-center py-10">Ładowanie galerii...</p>;
 
   return (
     <section className="py-16 bg-gray-100 relative">
-      <h2 className="text-3xl font-bold text-center mb-10 font-headers">Galeria</h2>
+      <h2 className="text-3xl font-bold text-center mb-10 font-headers">
+        Galeria
+      </h2>
 
       <div className="relative max-w-6xl mx-auto flex items-center">
         <button
-          className="hidden md:flex bg-white/90 shadow-lg w-10 h-10 rounded-full justify-center items-center hover:bg-gray-200 transition z-20 mr-2"
+          className="cursor-pointer hidden md:flex bg-white/90 shadow-lg w-10 h-10 rounded-full justify-center items-center hover:bg-gray-200 transition z-20 mr-2"
           onClick={() => scroll(-1)}
         >
           <FontAwesomeIcon icon={faArrowLeft} />
@@ -55,7 +57,7 @@ export default function Gallery() {
         </div>
 
         <button
-          className="hidden md:flex bg-white/90 shadow-lg w-10 h-10 rounded-full justify-center items-center hover:bg-gray-200 transition z-20 ml-2"
+          className="cursor-pointer hidden md:flex bg-white/90 shadow-lg w-10 h-10 rounded-full justify-center items-center hover:bg-gray-200 transition z-20 ml-2"
           onClick={() => scroll(1)}
         >
           <FontAwesomeIcon icon={faArrowRight} />

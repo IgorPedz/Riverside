@@ -5,7 +5,9 @@ export default function Footer() {
       <p className="text-gray-400">ul. Przykładowa 12, Warszawa</p>
       <p className="text-gray-400">+48 123 456 789 | kontakt@hotel.pl</p>
 
-      <p className="mt-6 text-gray-500">© 2025 Hotel Riverside. Wszelkie prawa zastrzeżone.</p>
+      <p className="mt-6 text-gray-500">
+        © 2025 Hotel Riverside. Wszelkie prawa zastrzeżone.
+      </p>
     </footer>
   );
 }

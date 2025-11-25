@@ -17,10 +17,13 @@ import SpaPage from "../pages/SPA-page";
 import AboutPage from "../pages/About-page";
 import LoginPage from "../pages/Login-page";
 import RegisterPage from "../pages/Register-page";
+import OffersPage from "../pages/Offer-page";
+import OffersPageRooms from "../pages/offer-rooms-page";
+import ReservationPage from "../pages/Reservation-page";
 
 export default function App() {
   const location = useLocation();
-  const hideNavbarPaths = ["/login", "/rejestracja"]; 
+  const hideNavbarPaths = ["/login", "/rejestracja", "/rezerwacja"];
   const hideNavbar = hideNavbarPaths.includes(location.pathname);
 
   return (
@@ -48,6 +51,9 @@ export default function App() {
         <Route path="/o-nas" element={<AboutPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/rejestracja" element={<RegisterPage />} />
+        <Route path="/oferty" element={<OffersPage />} />
+        <Route path="/oferty/noclegi" element={<OffersPageRooms />} />
+        <Route path="/rezerwacja" element={<ReservationPage />} />
       </Routes>
 
       <Footer />

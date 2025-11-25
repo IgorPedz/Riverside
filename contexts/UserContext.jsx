@@ -1,20 +1,24 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
-const UserContext = createContext(null);
+const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch (err) {
+      console.warn("Niepoprawny format usera w localStorage", err);
       localStorage.removeItem("user");
     }
-  }, [user]);
+  }, []);
+
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+  };
 
   const logout = () => {
     setUser(null);
@@ -22,7 +26,7 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, logout }}>
+    <UserContext.Provider value={{ user, setUser, login, logout }}>
       {children}
     </UserContext.Provider>
   );

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from "../public/logo.png";
-import { useUser } from "../contexts/UserContext.jsx"; // import hooka
+import { useUser } from "../contexts/UserContext.jsx";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -10,21 +10,27 @@ export default function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const { setUser } = useUser(); // pobieramy funkcję do ustawiania użytkownika
+  const { login } = useUser();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:3000/login", {
+      const response = await axios.post("http://localhost:3000/login", {
         email,
         password,
       });
 
-      setUser(res.data.user); 
-      console.log(res.data)
-      navigate("/"); 
+      const userData = {
+        id: response.data.id,
+        nick: response.data.name,
+        email: response.data.email,
+        isAdmin: response.data.isAdmin,
+      };
+
+      login(userData);
+      navigate("/");
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data) {
@@ -42,7 +48,9 @@ export default function Login() {
       </Link>
 
       <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-2xl mx-10">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Logowanie</h2>
+        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">
+          Logowanie
+        </h2>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
@@ -79,7 +87,10 @@ export default function Login() {
 
         <p className="mt-6 text-gray-600 text-center">
           Nie masz konta?{" "}
-          <Link to="/rejestracja" className="text-blue-500 hover:underline font-medium">
+          <Link
+            to="/rejestracja"
+            className="text-blue-500 hover:underline font-medium"
+          >
             Zarejestruj się
           </Link>
         </p>
@@ -87,31 +98,3 @@ export default function Login() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
