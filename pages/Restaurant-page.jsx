@@ -21,39 +21,33 @@ export default function RestaurantPage() {
   return (
     <section className="mt-10 max-w-10xl mx-auto px-4 py-16 bg-decor-soft">
       <section className="py-20 px-6 md:px-10 max-w-5xl mx-auto text-center relative z-10">
-        <h1 className="font-display text-6xl font-bold text-center mb-14">
-          Restauracja Hotelowa
-        </h1>
-        <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
-          {" "}
-          Zanurz się w świecie, w którym smak spotyka elegancję, a perfekcja
-          podania dopełnia wyjątkową atmosferę. Nasza restauracja to miejsce
-          stworzone dla tych, którzy szukają czegoś więcej niż zwykłego posiłku
-          — oferujemy kulinarne doświadczenie, które celebruje każdą chwilę.{" "}
-        </p>{" "}
-        <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
-          {" "}
-          Codziennie serwujemy dania inspirowane lokalnymi produktami i
-          międzynarodowymi trendami kulinarnymi, tworząc unikalne połączenia
-          smaków. Nasz szef kuchni dba o to, aby każde danie było opowieścią —
-          starannie skomponowaną, pełną aromatu i elegancji.{" "}
-        </p>{" "}
-        <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-12">
-          {" "}
-          Wnętrze restauracji otula ciepłym światłem, a panoramiczne
-          przeszklenia pozwalają podziwiać otaczającą hotel naturę, tworząc
-          idealne tło do romantycznych kolacji, rodzinnych spotkań czy
-          biznesowych obiadów.{" "}
-        </p>
-        <Link to="/oferty/restauracja">
-          <div className="inline-block px-10 py-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition cursor-pointer">
-            Zarezerwuj miejsce
-          </div>
-        </Link>
+        <div className="grid gap-10 bg-white/100 p-10 text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
+          <h1 className="font-display text-6xl font-bold text-center mb-14">
+            Restauracja Hotelowa
+          </h1>
+          <p>
+            Zanurz się w świecie, w którym smak spotyka elegancję, a perfekcja
+            podania dopełnia wyjątkową atmosferę. Nasza restauracja to miejsce
+            stworzone dla tych, którzy szukają czegoś więcej niż zwykłego
+            posiłku — oferujemy kulinarne doświadczenie, które celebruje każdą
+            chwilę. Codziennie serwujemy dania inspirowane lokalnymi produktami
+            i międzynarodowymi trendami kulinarnymi, tworząc unikalne połączenia
+            smaków. Nasz szef kuchni dba o to, aby każde danie było opowieścią —
+            starannie skomponowaną, pełną aromatu i elegancji. Wnętrze
+            restauracji otula ciepłym światłem, a panoramiczne przeszklenia
+            pozwalają podziwiać otaczającą hotel naturę, tworząc idealne tło do
+            romantycznych kolacji, rodzinnych spotkań czy biznesowych obiadów.
+          </p>
+          <Link to="/oferty/restauracja">
+            <div className="inline-block px-10 py-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition cursor-pointer">
+              Zarezerwuj miejsce
+            </div>
+          </Link>
+        </div>
       </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-10">
-        <div></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-5">
+        <div className="m:hidden"></div>
         {meals.map((meal) => (
           <div
             key={meal.id}

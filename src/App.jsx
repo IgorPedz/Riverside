@@ -20,6 +20,7 @@ import RegisterPage from "../pages/Register-page";
 import OffersPage from "../pages/Offer-page";
 import OffersPageRooms from "../pages/offer-rooms-page";
 import ReservationPage from "../pages/Reservation-page";
+import ProfilPage from "../pages//Profile-page"
 
 export default function App() {
   const location = useLocation();
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/oferty" element={<OffersPage />} />
         <Route path="/oferty/noclegi" element={<OffersPageRooms />} />
         <Route path="/rezerwacja" element={<ReservationPage />} />
+        <Route path="/profil" element={<ProfilPage />} />
       </Routes>
 
       <Footer />

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import axios from "axios";
+import ErrorMessage from "../components/ErrorMessage";
 
 export default function ReservationPage() {
   const location = useLocation();
@@ -11,6 +12,7 @@ export default function ReservationPage() {
   const { roomId, selectedRange } = location.state || {};
   const [room, setRoom] = useState(null);
   const [code, setCode] = useState("");
+  const [error, setError] = useState("");
 
   const generateReservationCode = () => {
     let code = "";
@@ -29,6 +31,7 @@ export default function ReservationPage() {
           `http://localhost:3000/api/rooms/${roomId}`
         );
         setRoom(res.data);
+        console.log(room);
       } catch (err) {
         console.error("Błąd pobierania pokoju:", err);
       }
@@ -61,16 +64,16 @@ export default function ReservationPage() {
         totalPrice,
         code,
       });
-
       navigate("/", { state: { reservationSuccess: true } });
     } catch (err) {
+      setError("Za mało środków na koncie!");
       console.error("Błąd przy tworzeniu rezerwacji:", err);
-      alert("Nie udało się zapisać rezerwacji.");
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 md:px-10 py-10 flex justify-center">
+       {error && <ErrorMessage header="Błąd Rezerwacji" message={error} />}
       <div className="bg-white rounded-2xl shadow-md p-6 w-full md:w-2/3">
         <h1 className="text-3xl font-bold mb-4">Podsumowanie rezerwacji</h1>
         <p className="mb-2">

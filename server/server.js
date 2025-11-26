@@ -52,10 +52,14 @@ app.get("/api/rooms/:id", async (req, res) => {
 });
 
 //Pobieranie danych o użytkownikach
-app.get("/users", async (req, res) => {
+app.get("/users/:id", async (req, res) => {
+  const userId = parseInt(req.params.id);
   try {
     const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute("SELECT * FROM users");
+    const [rows] = await connection.execute(
+      "SELECT * FROM users WHERE id = ?",
+      [userId]
+    );
     await connection.end();
     res.json(rows);
   } catch (err) {
@@ -439,31 +443,228 @@ app.get("/api/rooms/:id/reservations", async (req, res) => {
 
 //Dodawanie rezerwacji
 app.post("/api/reservations", async (req, res) => {
+  const connection = await mysql.createConnection(dbConfig);
+
   const { roomId, userId, startDate, endDate, totalPrice, code } = req.body;
 
-  if (!roomId || !userId || !startDate || !endDate || !totalPrice) {
-    return res.status(400).json({ error: "Niekompletne dane rezerwacji" });
+  const [user] = await connection.execute(
+    "SELECT saldo FROM users WHERE id = ?",
+    [userId]
+  );
+
+  if (user[0].saldo < totalPrice) {
+    await connection.end();
+    return res.status(400).json({ error: "Niewystarczające saldo" });
   }
 
   try {
-    const connection = await mysql.createConnection(dbConfig);
+
     const [result] = await connection.execute(
       `INSERT INTO reservations (room_id, user_id, start_date, end_date, total_price, reservationCode)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [roomId, userId, startDate, endDate, totalPrice, code]
     );
+
+    await connection.execute(
+      `UPDATE users SET saldo = saldo - ? WHERE id = ?`,
+      [totalPrice, userId]
+    );
+
     await connection.end();
 
     res.json({
-      message: "Rezerwacja zapisana",
+      message: "Rezerwacja zapisana, saldo zaktualizowane",
       reservationId: result.insertId,
     });
   } catch (err) {
-    console.error("Błąd przy zapisywaniu rezerwacji:", roomId, userId);
+    console.error("Błąd przy zapisywaniu rezerwacji:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
+//Profil wyświetlanie rezerwacji
+app.get("/api/reservations/:userId", async (req, res) => {
+  const userId = Number(req.params.userId);
+
+  if (isNaN(userId)) {
+    return res.status(400).json({ message: "Nieprawidłowy ID użytkownika" });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(dbConfig);
+
+    const [rows] = await connection.execute(
+      "SELECT * FROM reservations WHERE user_id = ? ORDER BY created_at DESC",
+      [userId]
+    );
+
+    res.json(Array.isArray(rows) ? rows : []);
+  } catch (err) {
+    console.error("Błąd pobierania rezerwacji:", err);
+    res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+//Profil anulowanie rezerwacji
+app.put("/api/reservations/:id/cancel", async (req, res) => {
+  const reservationId = Number(req.params.id);
+  if (isNaN(reservationId))
+    return res.status(400).json({ message: "Nieprawidłowy ID rezerwacji" });
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(dbConfig);
+
+    const [reservationResult] = await connection.execute(
+      "SELECT user_id, total_price FROM reservations WHERE id = ?",
+      [reservationId]
+    );
+
+    if (reservationResult.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: "Rezerwacja nie istnieje" });
+    }
+
+    const { user_id, total_price } = reservationResult[0];
+
+    await connection.execute("DELETE FROM reservations WHERE id = ?", [
+      reservationId,
+    ]);
+
+    await connection.execute(
+      "UPDATE users SET saldo = saldo + ? WHERE id = ?",
+      [total_price, user_id]
+    );
+
+    await connection.end();
+
+    res.json({
+      message: "Rezerwacja anulowana, środki zwrócone",
+      refunded: total_price,
+    });
+  } catch (err) {
+    console.error("Błąd anulowania:", err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+//Dodawanie ulubionych
+app.post("/api/favourites", async (req, res) => {
+  const connection = await mysql.createConnection(dbConfig);
+  const { userId, roomId } = req.body;
+  try {
+    await connection.execute(
+      "INSERT INTO favourites (user_id, fav_id) VALUES (?, ?)",
+      [userId, roomId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+//Usuwanie ulubionych
+app.delete("/api/favourites/:userId/:roomId", async (req, res) => {
+  const connection = await mysql.createConnection(dbConfig);
+  const { userId, roomId } = req.params;
+  try {
+    await connection.execute(
+      "DELETE FROM favourites WHERE user_id = ? AND fav_id = ?",
+      [userId, roomId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+//Sprawdzanie ulubionych
+app.get("/api/favourites/:userId", async (req, res) => {
+  const userId = Number(req.params.userId);
+  if (isNaN(userId))
+    return res.status(400).json({ message: "Nieprawidłowy ID użytkownika" });
+
+  const connection = await mysql.createConnection(dbConfig);
+  try {
+    const [rows] = await connection.execute(
+      "SELECT * FROM favourites LEFT JOIN rooms ON favourites.fav_id = rooms.id WHERE user_id = ?",
+      [userId]
+    );
+    res.json(Array.isArray(rows) ? rows : []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    await connection.end();
+  }
+});
+
+//Profil usuwanie konta
+app.delete("/users/del/:id", async (req, res) => {
+  const connection = await mysql.createConnection(dbConfig);
+  const userId = Number(req.params.id);
+  try {
+    await connection.execute("DELETE FROM users WHERE id = ?", [userId]);
+    res.json({ message: "Użytkownik usunięty" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+//Profil zmiana hasła
+app.put("/users/change-password/:userId", async (req, res) => {
+  const userId = Number(req.params.userId);
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: "Brak wymaganych danych" });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(dbConfig);
+
+    // Pobierz obecne hasło użytkownika
+    const [rows] = await connection.execute(
+      "SELECT haslo FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Użytkownik nie znaleziony" });
+    }
+
+    const hashedPassword = rows[0].haslo;
+
+    // Sprawdź stare hasło
+    const isMatch = await bcrypt.compare(oldPassword, hashedPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Nieprawidłowe stare hasło" });
+    }
+
+    // Hash nowego hasła
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Aktualizacja w DB
+    await connection.execute("UPDATE users SET haslo = ? WHERE id = ?", [
+      newHashedPassword,
+      userId,
+    ]);
+
+    res.json({ message: "Hasło zmienione pomyślnie" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
 app.listen(port, () => {
   console.log(`Serwer działa na http://localhost:${port}`);
 });

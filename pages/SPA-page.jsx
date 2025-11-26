@@ -21,27 +21,24 @@ export default function Spa() {
   return (
     <section className="mt-10 max-w-10xl mx-auto px-4 py-16 bg-decor-soft">
       <section className="py-20 px-6 md:px-10 max-w-5xl mx-auto text-center relative z-10">
-        <h1 className="font-display text-6xl font-bold text-center mb-14">
-          SPA & Wellness
-        </h1>
-        <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
-          {" "}
-          Odkryj oazę spokoju w naszym luksusowym SPA & Wellness. Elegancka
-          przestrzeń, nastrojowe światło i zapach naturalnych olejków pozwolą Ci
-          oderwać się od codzienności.{" "}
-        </p>{" "}
-        <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
-          {" "}
-          Oferujemy masaże wykonywane przez profesjonalnych terapeutów,
-          kompleksową strefę saun oraz zabiegi pielęgnacyjne premium, które
-          przywracają harmonię ciału i umysłowi. Zafunduj sobie chwilę dla
-          siebie — zasługujesz na to.{" "}
-        </p>
-        <Link to="/oferty/spa">
-          <div className="inline-block px-10 py-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition cursor-pointer">
-            Zarezerwuj zabieg
-          </div>
-        </Link>
+        <div className="grid gap-5 bg-white/100 p-10 round-b shadow-lg text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
+          <h1 className="font-display text-6xl font-bold text-center mb-14">
+            SPA & Wellness
+          </h1>
+          <p className="">
+            Odkryj oazę spokoju w naszym luksusowym SPA & Wellness. Elegancka
+            przestrzeń, nastrojowe światło i zapach naturalnych olejków pozwolą
+            Ci oderwać się od codzienności. Oferujemy masaże wykonywane przez
+            profesjonalnych terapeutów, kompleksową strefę saun oraz zabiegi
+            pielęgnacyjne premium, które przywracają harmonię ciału i umysłowi.
+            Zafunduj sobie chwilę dla siebie — zasługujesz na to.
+          </p>
+          <Link to="/oferty/spa">
+            <div className="inline-block px-10 py-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition cursor-pointer">
+              Zarezerwuj zabieg
+            </div>
+          </Link>
+        </div>
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-10">

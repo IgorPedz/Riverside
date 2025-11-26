@@ -1,6 +1,6 @@
 export default function OffersPage() {
   return (
-    <div className="bg-gray-50 text-gray-800">
+    <div className="bg-gray-50 text-gray-800 bg-decor-soft">
       <section className="relative h-72 md:h-96 w-full">
         <img
           src="../public/hotel-pic-7.png"

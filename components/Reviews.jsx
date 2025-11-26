@@ -92,7 +92,7 @@ export default function Reviews({ type, id }) {
   if (error) return <p>{error}</p>;
 
   return (
-    <div>
+    <div className="h-35 overflow-y-auto">
       {reviews.map((rev) => (
         <div
           key={rev.id}
@@ -148,6 +148,7 @@ export default function Reviews({ type, id }) {
           )}
         </div>
       ))}
+
       <ConfirmDialog
         open={confirmOpen}
         onConfirm={() => {
@@ -158,6 +159,7 @@ export default function Reviews({ type, id }) {
         message="Czy na pewno chcesz usunąć tę opinię?"
         onCancel={() => setConfirmOpen(false)}
       />
+      
       {user && (
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2">
           <textarea

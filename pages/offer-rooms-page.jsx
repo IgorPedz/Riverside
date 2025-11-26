@@ -12,6 +12,7 @@ export default function AccommodationOffers() {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [favoritesMap, setFavoritesMap] = useState({});
 
   const { user } = useUser();
   const navigate = useNavigate();
@@ -22,23 +23,33 @@ export default function AccommodationOffers() {
   const [selectedRange, setSelectedRange] = useState([null, null]);
 
   useEffect(() => {
-    const fetchRooms = async () => {
+    if (!user) return;
+    const fetchRoomsAndFavorites = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/rooms");
-        setRoomsData(res.data);
+        const roomsRes = await axios.get("http://localhost:3000/api/rooms");
+        setRoomsData(roomsRes.data);
+        const favRes = await axios.get(
+          `http://localhost:3000/api/favourites/${user.id}`
+        );
+        const favMap = {};
+        favRes.data.forEach((fav) => {
+          favMap[fav.fav_id] = true;
+        });
+        setFavoritesMap(favMap);
 
-        if (res.data.length > 0 && location.state?.roomId) {
-          const room = res.data.find((r) => r.id === location.state.roomId);
+        if (roomsRes.data.length > 0 && location.state?.roomId) {
+          const room = roomsRes.data.find(
+            (r) => r.id === location.state.roomId
+          );
           if (room) setSelectedRoom(room);
-
           navigate(location.pathname, { replace: true, state: {} });
         }
       } catch (err) {
         console.error("Błąd pobierania danych:", err);
       }
     };
-    fetchRooms();
-  }, [location.state?.roomId, navigate, location.pathname]);
+    fetchRoomsAndFavorites();
+  }, [user, location.state?.roomId, navigate, location.pathname]);
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -63,9 +74,12 @@ export default function AccommodationOffers() {
       }
     };
     fetchReservations();
+    setSelectedRange([null, null]);
+    setOccupiedDates([]);
   }, [selectedRoom]);
 
   if (!user) navigate("/login");
+
   const isDateOccupied = (date) =>
     occupiedDates.some(
       (d) =>
@@ -79,6 +93,34 @@ export default function AccommodationOffers() {
     .sort((a, b) =>
       sortOrder === "asc" ? a.price - b.price : b.price - a.price
     );
+
+  const disablePastDates = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
+  const toggleFavorite = async (roomId) => {
+    if (!user) return;
+    try {
+      if (favoritesMap[roomId]) {
+        // Usuń z ulubionych
+        await axios.delete(
+          `http://localhost:3000/api/favourites/${user.id}/${roomId}`
+        );
+        setFavoritesMap((prev) => ({ ...prev, [roomId]: false }));
+      } else {
+        // Dodaj do ulubionych
+        await axios.post("http://localhost:3000/api/favourites", {
+          userId: user.id,
+          roomId,
+        });
+        setFavoritesMap((prev) => ({ ...prev, [roomId]: true }));
+      }
+    } catch (err) {
+      console.error("Błąd zmiany ulubionych:", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 md:px-10 py-10">
@@ -108,13 +150,27 @@ export default function AccommodationOffers() {
         {filteredRooms.map((room) => (
           <div
             key={room.id}
-            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition"
+            className="relative bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition"
           >
+            <button
+              onClick={() => toggleFavorite(room.id)}
+              className="cursor-pointer absolute top-3 right-3 text-2xl z-10"
+            >
+              <span
+                className={`${
+                  favoritesMap[room.id] ? "text-yellow-400" : "text-gray-300"
+                } transition-colors`}
+              >
+                ★
+              </span>
+            </button>
+
             <img
               src={room.img}
               alt={room.name}
               className="w-full h-56 object-cover"
             />
+
             <div className="p-5">
               <h2 className="text-2xl font-semibold mb-2">{room.name}</h2>
               <p className="text-gray-600 mb-2">{room.short_desc}</p>
@@ -162,7 +218,7 @@ export default function AccommodationOffers() {
               </div>
 
               <div className="md:w-1/2 flex flex-col">
-                <h2 className="text-3xl font-bold mb-4">{selectedRoom.name}</h2>
+                <h2 className="text-3xl font-bold mb-4">{selectedRoom.name} ---- {selectedRoom.price} PLN / noc</h2>
                 <p className="text-gray-700 mb-4">{selectedRoom.long_desc}</p>
 
                 <table className="w-full mb-4 border border-gray-200">
@@ -201,20 +257,30 @@ export default function AccommodationOffers() {
                   <Calendar
                     selectRange={true}
                     onChange={(range) => setSelectedRange(range)}
-                    tileDisabled={({ date }) => isDateOccupied(date)}
+                    tileDisabled={({ date }) =>
+                      disablePastDates(date) || isDateOccupied(date)
+                    }
                   />
                 </div>
 
                 <button
-                  className="cursor-pointer w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition mb-4"
-                  onClick={() =>
+                  className={`w-full py-2 rounded-lg text-white transition mb-4 ${
+                    !selectedRange || !selectedRange[0]
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
+                  onClick={() => {
+                    if (!selectedRange || !selectedRange[0]) {
+                      return;
+                    }
+
                     navigate("/rezerwacja", {
                       state: {
                         roomId: selectedRoom.id,
                         selectedRange: selectedRange,
                       },
-                    })
-                  }
+                    });
+                  }}
                 >
                   Zarezerwuj
                 </button>

@@ -141,28 +141,22 @@ export default function Navbar() {
                   "
                 >
                   <Link
-                    to="/profile/reservations"
+                    to="/profil?tab=rezerwacje"
                     className="block px-4 py-2 hover:bg-gray-100 transition"
                   >
                     Moje Rezerwacje
                   </Link>
                   <Link
-                    to="/profile/transactions"
+                    to="/profil?tab=ulubione"
                     className="block px-4 py-2 hover:bg-gray-100 transition"
                   >
-                    Moje Transakcje
+                    Moje Ulubione
                   </Link>
                   <Link
-                    to="/profile/favorites"
+                    to="/profil?tab=konto"
                     className="block px-4 py-2 hover:bg-gray-100 transition"
                   >
-                    Ulubione
-                  </Link>
-                  <Link
-                    to="/profile/balance"
-                    className="block px-4 py-2 hover:bg-gray-100 transition"
-                  >
-                    Saldo
+                    Konto
                   </Link>
                   <button
                     onClick={() => setConfirmOpen(true)}
@@ -220,28 +214,22 @@ export default function Navbar() {
         "
                   >
                     <Link
-                      to="/profile/reservations"
+                      to="/profil?tab=rezerwacje"
                       className="block px-4 py-2 hover:bg-gray-100 transition"
                     >
                       Moje Rezerwacje
                     </Link>
                     <Link
-                      to="/profile/transactions"
+                      to="/profil?tab=ulubione"
                       className="block px-4 py-2 hover:bg-gray-100 transition"
                     >
-                      Moje Transakcje
+                      Moje Ulubione
                     </Link>
                     <Link
-                      to="/profile/favorites"
+                      to="/profil?tab=konto"
                       className="block px-4 py-2 hover:bg-gray-100 transition"
                     >
-                      Ulubione
-                    </Link>
-                    <Link
-                      to="/profile/balance"
-                      className="block px-4 py-2 hover:bg-gray-100 transition"
-                    >
-                      Saldo
+                      Konto
                     </Link>
                     <button
                       onClick={() => setConfirmOpen(true)}
