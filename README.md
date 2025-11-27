@@ -80,24 +80,19 @@ Strona korzysta z **MySQL** do przechowywania danych m.in o:
 
 - **WAŻNE** - Aby uruchomić stronę trzeba zaimportować bazę danych MySql do phpmyadmina i uruchomić xamppa!
 
-```
 
-echo "🔥 Riverside — instalacja projektu (frontend + backend + mysql)"
-```
+
+##🔥 Riverside — instalacja projektu (frontend + backend + mysql)"
+
 # --- 1. Klonowanie repo ---
 ```
-echo " Klonowanie repozytorium..."
-git clone https://github.com/twoje/repo.git
+git clone https://github.com/IgorPedz/Riverside.git
 cd repo || exit
 ```
 # --- 2. Instalacja FRONTENDU ---
 ```
-echo " Instalacja frontendu..."
 cd front || exit
 npm install
-```
-```
-echo " Uruchamianie frontendu (port 5173)..."
 npm run dev &
 FRONT_PID=$!
 ```
