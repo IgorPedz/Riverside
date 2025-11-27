@@ -7,7 +7,7 @@ import { faTrash, faEdit } from "@fortawesome/free-solid-svg-icons";
 
 import ConfirmDialog from "./ConfirmDialog";
 
-export default function Reviews({ type, id }) {
+export default function Reviews({ type, id, selectedOffer }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,8 +21,10 @@ export default function Reviews({ type, id }) {
 
   const fetchReviews = async () => {
     if (!type || !id) return;
+
     try {
       setLoading(true);
+
       const res = await axios.get(
         `http://localhost:3000/api/${type}/${id}/reviews`
       );
@@ -45,10 +47,18 @@ export default function Reviews({ type, id }) {
     if (!user || !comment) return;
 
     try {
-      await axios.post(`http://localhost:3000/api/${type}/${id}/reviews`, {
-        user_name: user.nick,
-        comment,
-      });
+      await axios.post(
+        `http://localhost:3000/api/${type}/${
+          type === "spa" ? selectedOffer.id : id
+        }/reviews`,
+        {
+          user_name: user.nick,
+          comment,
+          ...(type === "spa" &&
+            selectedOffer && { category_id: selectedOffer.categoryId }),
+        }
+      );
+
       setComment("");
       fetchReviews();
     } catch (err) {
@@ -159,7 +169,7 @@ export default function Reviews({ type, id }) {
         message="Czy na pewno chcesz usunąć tę opinię?"
         onCancel={() => setConfirmOpen(false)}
       />
-      
+
       {user && (
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2">
           <textarea

@@ -122,6 +122,61 @@ app.get("/spa", async (req, res) => {
   }
 });
 
+//Pobieranie danych o 1 zabiegu SPA
+app.get("/spa/:offerId", async (req, res) => {
+  const { offerId } = req.params; 
+  const connection = await mysql.createConnection(dbConfig);
+
+    let cateId = null;
+    let id = offerId;
+
+    const parts = id.split("-");
+    cateId = parts[0]; 
+    id = parts[1]; 
+
+  try {
+    const [items] = await connection.execute(
+      "SELECT * FROM spa_offer_items WHERE id = ?",
+      [id]
+    );
+
+    if (items.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: "Nie znaleziono oferty SPA" });
+    }
+
+    const item = items[0];
+
+    const [categories] = await connection.execute(
+      "SELECT * FROM spa_categories WHERE id = ?",
+      [item.category_id]
+    );
+
+    if (categories.length === 0) {
+      await connection.end();
+      return res.status(404).json({ message: "Nie znaleziono kategorii SPA" });
+    }
+
+    const category = categories[0];
+
+    const result = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      categoryId: category.id,
+      categoryTitle: category.title,
+      hours: category.hours,
+      img: category.img,
+    };
+
+    await connection.end();
+    res.json(result);
+  } catch (err) {
+    console.error("Błąd w /spa/:offerId:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 //Pobieranie danych o menu
 app.get("/meals", async (req, res) => {
   try {
@@ -258,85 +313,118 @@ app.get("/api/rooms", async (req, res) => {
         })),
       };
     });
-
-    //Pobieranie opinii
-    app.get("/api/:type/:id/reviews", async (req, res) => {
-      const { type, id } = req.params;
-
-      let tableName;
-      switch (type) {
-        case "rooms":
-          tableName = "room_reviews";
-          break;
-        case "spa":
-          tableName = "spa_reviews";
-          break;
-        case "restaurant":
-          tableName = "restaurant_reviews";
-          break;
-        default:
-          return res.status(400).json({ message: "Niepoprawny typ" });
-      }
-
-      try {
-        const [rows] = await connection.execute(
-          `SELECT id, user_name as user, comment FROM ${tableName} WHERE ${type.slice(
-            0,
-            -1
-          )}_id = ?`,
-          [id]
-        );
-        res.json(rows); // <-- id musi tu być
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Błąd serwera" });
-      }
-    });
-
-    //Dodawanie opinii
-    app.post("/api/:type/:id/reviews", async (req, res) => {
-      const { type, id } = req.params;
-      const { user_name, comment } = req.body;
-
-      const connection = await mysql.createConnection(dbConfig);
-
-      if (!user_name || !comment) {
-        return res.status(400).json({ message: "Brak danych" });
-      }
-
-      try {
-        let tableName;
-        switch (type) {
-          case "rooms":
-            tableName = "room_reviews";
-            break;
-          case "spa":
-            tableName = "spa_reviews";
-            break;
-          case "restaurant":
-            tableName = "restaurant_reviews";
-            break;
-          default:
-            return res.status(400).json({ message: "Niepoprawny typ" });
-        }
-
-        const sql = `INSERT INTO ${tableName} (${type.slice(
-          0,
-          -1
-        )}_id, user_name, comment) VALUES (?, ?, ?)`;
-        await connection.execute(sql, [id, user_name, comment]);
-
-        res.status(201).json({ message: "Dodano opinię" });
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Błąd serwera" });
-      }
-    });
-
     res.json(roomsWithDetails);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+//Pobieranie opinii
+app.get("/api/:type/:id/reviews", async (req, res) => {
+  const { type, id } = req.params;
+
+  const connection = await mysql.createConnection(dbConfig);
+
+  try {
+    let rows;
+
+    switch (type) {
+      case "rooms":
+        [rows] = await connection.execute(
+          "SELECT id, user_name as user, comment FROM room_reviews WHERE room_id = ?",
+          [id]
+        );
+        break;
+
+      case "restaurant":
+        [rows] = await connection.execute(
+          "SELECT id, user_name as user, comment FROM restaurant_reviews WHERE restaurant_id = ?",
+          [id]
+        );
+        break;
+
+      case "spa":
+        const [categoryId, offerIndex] = id.split("-");
+        if (!categoryId || offerIndex === undefined)
+          return res
+            .status(400)
+            .json({ message: "Niepoprawny format id dla SPA" });
+
+        [rows] = await connection.execute(
+          "SELECT id, user_name as user, comment, category_id FROM spa_reviews WHERE category_id = ? AND spa_offer_id = ?",
+          [categoryId, offerIndex]
+        );
+        break;
+
+      default:
+        return res.status(400).json({ message: "Niepoprawny typ" });
+    }
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+// Dodawanie opinii
+app.post("/api/:type/:id/reviews", async (req, res) => {
+  const { type, id } = req.params;
+  console.log(id);
+  const { user_name, comment, categoryId } = req.body; // SPA może wysyłać category_id
+
+  let cateId = null;
+  let offerId = id; // domyślnie całe id
+
+  if (type === "spa" && id.includes("-")) {
+    const parts = id.split("-");
+    cateId = parts[0]; // pierwsza część to category_id
+    offerId = parts[1]; // druga część to offer_id
+  }
+
+  if (!user_name || !comment) {
+    return res.status(400).json({ message: "Brak danych" });
+  }
+
+  const connection = await mysql.createConnection(dbConfig);
+
+  try {
+    switch (type) {
+      case "rooms":
+        // room_reviews: room_id, user_name, comment
+        await connection.execute(
+          "INSERT INTO room_reviews (room_id, user_name, comment) VALUES (?, ?, ?)",
+          [id, user_name, comment]
+        );
+        break;
+
+      case "restaurant":
+        // restaurant_reviews: restaurant_id, user_name, comment
+        await connection.execute(
+          "INSERT INTO restaurant_reviews (restaurant_id, user_name, comment) VALUES (?, ?, ?)",
+          [id, user_name, comment]
+        );
+        break;
+
+      case "spa":
+        // spa_reviews: spa_id, category_id, user_name, comment
+        await connection.execute(
+          "INSERT INTO spa_reviews (spa_offer_id, category_id, user_name, comment) VALUES (?, ?, ?, ?)",
+          [offerId, cateId, user_name, comment]
+        );
+        break;
+
+      default:
+        return res.status(400).json({ message: "Niepoprawny typ" });
+    }
+
+    res.status(201).json({ message: "Dodano opinię" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    await connection.end();
   }
 });
 
@@ -345,31 +433,47 @@ app.put("/api/:type/:id/reviews/:reviewId", async (req, res) => {
   const { type, id, reviewId } = req.params;
   const { comment } = req.body;
 
-  const connection = await mysql.createConnection(dbConfig);
+  let cateId = null;
+  let offerId = id; // domyślnie całe id
+
+  if (type === "spa" && id.includes("-")) {
+    const parts = id.split("-");
+    cateId = parts[0]; // pierwsza część to category_id
+    offerId = parts[1]; // druga część to offer_id
+  }
 
   if (!comment) return res.status(400).json({ message: "Brak komentarza" });
 
+  const connection = await mysql.createConnection(dbConfig);
+
   try {
-    let tableName;
+    let result;
+
     switch (type) {
       case "rooms":
-        tableName = "room_reviews";
+        [result] = await connection.execute(
+          "UPDATE room_reviews SET comment = ? WHERE id = ? AND room_id = ?",
+          [comment, reviewId, id]
+        );
         break;
+
       case "spa":
-        tableName = "spa_reviews";
+        [result] = await connection.execute(
+          "UPDATE spa_reviews SET comment = ? WHERE id = ? AND spa_offer_id = ?",
+          [comment, reviewId, offerId]
+        );
         break;
+
       case "restaurant":
-        tableName = "restaurant_reviews";
+        [result] = await connection.execute(
+          "UPDATE restaurant_reviews SET comment = ? WHERE id = ? AND restaurant_id = ?",
+          [comment, reviewId, id]
+        );
         break;
+
       default:
         return res.status(400).json({ message: "Niepoprawny typ" });
     }
-
-    const sql = `UPDATE ${tableName} SET comment = ? WHERE id = ? AND ${type.slice(
-      0,
-      -1
-    )}_id = ?`;
-    const [result] = await connection.execute(sql, [comment, reviewId, id]);
 
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Nie znaleziono opinii" });
@@ -378,6 +482,8 @@ app.put("/api/:type/:id/reviews/:reviewId", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    await connection.end();
   }
 });
 
@@ -387,27 +493,44 @@ app.delete("/api/:type/:id/reviews/:reviewId", async (req, res) => {
 
   const connection = await mysql.createConnection(dbConfig);
 
+  let cateId = null;
+  let offerId = id;
+
+  if (type === "spa" && id.includes("-")) {
+    const parts = id.split("-");
+    cateId = parts[0];
+    offerId = parts[1];
+  }
+
   try {
-    let tableName;
+    let result;
+
     switch (type) {
       case "rooms":
-        tableName = "room_reviews";
+        [result] = await connection.execute(
+          "DELETE FROM room_reviews WHERE id = ? AND room_id = ?",
+          [reviewId, id]
+        );
         break;
+
       case "spa":
-        tableName = "spa_reviews";
+        [result] = await connection.execute(
+          "DELETE FROM spa_reviews WHERE id = ? AND spa_offer_id = ?",
+          [reviewId, offerId]
+        );
         break;
+
       case "restaurant":
-        tableName = "restaurant_reviews";
+        // Usuwanie opinii z restaurant_reviews
+        [result] = await connection.execute(
+          "DELETE FROM restaurant_reviews WHERE id = ? AND restaurant_id = ?",
+          [reviewId, id]
+        );
         break;
+
       default:
         return res.status(400).json({ message: "Niepoprawny typ" });
     }
-
-    const sql = `DELETE FROM ${tableName} WHERE id = ? AND ${type.slice(
-      0,
-      -1
-    )}_id = ?`;
-    const [result] = await connection.execute(sql, [reviewId, id]);
 
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Nie znaleziono opinii" });
@@ -416,6 +539,8 @@ app.delete("/api/:type/:id/reviews/:reviewId", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    await connection.end();
   }
 });
 
@@ -430,6 +555,35 @@ app.get("/api/rooms/:id/reservations", async (req, res) => {
        FROM reservations
        WHERE room_id = ?`,
       [id]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Błąd serwera" });
+  } finally {
+    await connection.end();
+  }
+});
+
+//Pobieranie rezerwacji danej usługi SPA
+app.get("/api/reservations/spa/:id", async (req, res) => {
+  const { id } = req.params;
+
+  let cateId = null;
+  let offerId = id; 
+
+    const parts = id.split("-");
+    cateId = parts[0]; 
+    offerId = parts[1]; 
+
+  const connection = await mysql.createConnection(dbConfig);
+  try {
+    const [rows] = await connection.execute(
+      `SELECT date, hour
+       FROM reservations_spa
+       WHERE offer_id = ?`,
+      [offerId]
     );
 
     res.json(rows);
@@ -458,7 +612,6 @@ app.post("/api/reservations", async (req, res) => {
   }
 
   try {
-
     const [result] = await connection.execute(
       `INSERT INTO reservations (room_id, user_id, start_date, end_date, total_price, reservationCode)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -482,6 +635,48 @@ app.post("/api/reservations", async (req, res) => {
   }
 });
 
+// Dodawanie rezerwacji SPA
+app.post("/api/spa/reservations", async (req, res) => {
+  const connection = await mysql.createConnection(dbConfig);
+
+  const { spaOfferId, categoryId, userId, date, hour, price, code } = req.body;
+
+  try {
+    const [user] = await connection.execute(
+      "SELECT saldo FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (!user[0] || user[0].saldo < price) {
+      await connection.end();
+      return res.status(400).json({ error: "Niewystarczające saldo" });
+    }
+
+    const [result] = await connection.execute(
+      `INSERT INTO reservations_spa
+       (offer_id, category_id, user_id, date, hour, price, code)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [spaOfferId, categoryId, userId, date, hour, price, code]
+    );
+
+    // Aktualizacja salda użytkownika
+    await connection.execute(
+      `UPDATE users SET saldo = saldo - ? WHERE id = ?`,
+      [price, userId]
+    );
+
+    await connection.end();
+
+    res.json({
+      message: "Rezerwacja SPA zapisana, saldo zaktualizowane",
+      reservationId: result.insertId,
+    });
+  } catch (err) {
+    console.error("Błąd przy zapisywaniu rezerwacji SPA:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 //Profil wyświetlanie rezerwacji
 app.get("/api/reservations/:userId", async (req, res) => {
   const userId = Number(req.params.userId);
@@ -494,12 +689,26 @@ app.get("/api/reservations/:userId", async (req, res) => {
   try {
     connection = await mysql.createConnection(dbConfig);
 
-    const [rows] = await connection.execute(
-      "SELECT * FROM reservations WHERE user_id = ? ORDER BY created_at DESC",
+    // Rezerwacje pokoi
+    const [roomReservations] = await connection.execute(
+      "SELECT reservations.*, 'room' AS type,rooms.name FROM reservations LEFT JOIN rooms ON reservations.room_id = rooms.id WHERE user_id = ? ORDER BY created_at DESC;",
       [userId]
     );
 
-    res.json(Array.isArray(rows) ? rows : []);
+    // Rezerwacje SPA
+    const [spaReservations] = await connection.execute(
+      `SELECT sr.*, s.name AS offerName, sc.title AS categoryTitle, 'spa' AS type FROM reservations_spa sr 
+      JOIN spa_offer_items s ON sr.offer_id = s.id 
+      JOIN spa_categories sc ON sr.category_id = sc.id 
+      WHERE sr.user_id = ? 
+      ORDER BY sr.created_at DESC;`,
+      [userId]
+    );
+
+    res.json({
+      rooms: Array.isArray(roomReservations) ? roomReservations : [],
+      spa: Array.isArray(spaReservations) ? spaReservations : [],
+    });
   } catch (err) {
     console.error("Błąd pobierania rezerwacji:", err);
     res.status(500).json({ message: "Błąd serwera" });
@@ -511,29 +720,50 @@ app.get("/api/reservations/:userId", async (req, res) => {
 //Profil anulowanie rezerwacji
 app.put("/api/reservations/:id/cancel", async (req, res) => {
   const reservationId = Number(req.params.id);
+  const { type } = req.body; // "room" lub "spa"
+
   if (isNaN(reservationId))
     return res.status(400).json({ message: "Nieprawidłowy ID rezerwacji" });
+
+  if (!type || !["room", "spa"].includes(type))
+    return res.status(400).json({ message: "Nieprawidłowy typ rezerwacji" });
 
   let connection;
   try {
     connection = await mysql.createConnection(dbConfig);
 
-    const [reservationResult] = await connection.execute(
-      "SELECT user_id, total_price FROM reservations WHERE id = ?",
-      [reservationId]
-    );
+    let query, reservation;
+    if (type === "room") {
+      query = "SELECT user_id, total_price FROM reservations WHERE id = ?";
+    } else if (type === "spa") {
+      query =
+        "SELECT user_id, price AS total_price FROM reservations_spa WHERE id = ?";
+    }
+
+    const [reservationResult] = await connection.execute(query, [
+      reservationId,
+    ]);
 
     if (reservationResult.length === 0) {
       await connection.end();
       return res.status(404).json({ message: "Rezerwacja nie istnieje" });
     }
 
-    const { user_id, total_price } = reservationResult[0];
+    reservation = reservationResult[0];
+    const { user_id, total_price } = reservation;
 
-    await connection.execute("DELETE FROM reservations WHERE id = ?", [
-      reservationId,
-    ]);
+    // Usuwanie rezerwacji
+    if (type === "room") {
+      await connection.execute("DELETE FROM reservations WHERE id = ?", [
+        reservationId,
+      ]);
+    } else if (type === "spa") {
+      await connection.execute("DELETE FROM reservations_spa WHERE id = ?", [
+        reservationId,
+      ]);
+    }
 
+    // Zwrot środków
     await connection.execute(
       "UPDATE users SET saldo = saldo + ? WHERE id = ?",
       [total_price, user_id]
@@ -542,11 +772,14 @@ app.put("/api/reservations/:id/cancel", async (req, res) => {
     await connection.end();
 
     res.json({
-      message: "Rezerwacja anulowana, środki zwrócone",
+      message: `Rezerwacja ${
+        type === "room" ? "pokoju" : "SPA"
+      } anulowana, środki zwrócone`,
       refunded: total_price,
     });
   } catch (err) {
     console.error("Błąd anulowania:", err);
+    if (connection) await connection.end();
     res.status(500).json({ message: "Błąd serwera" });
   }
 });
@@ -665,6 +898,32 @@ app.put("/users/change-password/:userId", async (req, res) => {
     if (connection) await connection.end();
   }
 });
+
+//Profil doładowanie konta
+app.put("/api/users/:id/topup", async (req, res) => {
+  const userId = Number(req.params.id);
+  const { amount } = req.body;
+
+  if (isNaN(userId) || !amount || isNaN(amount) || amount <= 0) {
+    return res.status(400).json({ message: "Nieprawidłowe dane" });
+  }
+
+  let connection;
+  try {
+    connection = await mysql.createConnection(dbConfig);
+    await connection.execute(
+      "UPDATE users SET saldo = saldo + ? WHERE id = ?",
+      [amount, userId]
+    );
+    await connection.end();
+    res.json({ message: "Doładowanie zakończone", amount });
+  } catch (err) {
+    console.error("Błąd doładowania:", err);
+    if (connection) await connection.end();
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Serwer działa na http://localhost:${port}`);
 });

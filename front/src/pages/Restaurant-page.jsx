@@ -19,7 +19,7 @@ export default function RestaurantPage() {
   }, []);
 
   return (
-    <section className="mt-10 max-w-10xl mx-auto px-4 py-16 bg-decor-soft">
+    <section className="max-w-10xl mx-auto px-4 py-16 bg-decor-soft">
       <section className="py-20 px-6 md:px-10 max-w-5xl mx-auto text-center relative z-10">
         <div className="grid gap-10 bg-white/100 p-10 text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
           <h1 className="font-display text-6xl font-bold text-center mb-14">
@@ -37,17 +37,13 @@ export default function RestaurantPage() {
             restauracji otula ciepłym światłem, a panoramiczne przeszklenia
             pozwalają podziwiać otaczającą hotel naturę, tworząc idealne tło do
             romantycznych kolacji, rodzinnych spotkań czy biznesowych obiadów.
+
+            <p className="text-3xl p-5">!Wstęp do restauracji wyłącznie dla gości hotelu!</p>
           </p>
-          <Link to="/oferty/restauracja">
-            <div className="inline-block px-10 py-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition cursor-pointer">
-              Zarezerwuj miejsce
-            </div>
-          </Link>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-        <div className="m:hidden"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-5">
         {meals.map((meal) => (
           <div
             key={meal.id}

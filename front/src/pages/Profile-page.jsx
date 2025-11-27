@@ -1,58 +1,74 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import axios from "axios";
 import { useUser } from "../contexts/UserContext";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ChangePasswordModal from "../components/ChangePasswordModal";
-import ErrorMessage from "../components/ErrorMessage"
+import MoneyModal from "../components/MoneyModal";
+import ErrorMessage from "../components/ErrorMessage";
 
 export default function ProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, logout } = useUser();
 
-  const [reservations, setReservations] = useState([]);
+  const [reservations, setReservations] = useState({ rooms: [], spa: [] });
   const [favorites, setFavorites] = useState([]);
   const [users, setUsers] = useState([]);
+  const [type, setType] = useState("");
 
+  const [confirmMoneyOpen, setConfirmMoneyOpen] = useState(false);
   const [confirmDeclineOpen, setConfirmDeclineOpen] = useState(false);
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [confirmSurenessDeleteOpen, setConfirmSurenessDeleteOpen] = useState(false);
+  const [confirmSurenessDeleteOpen, setConfirmSurenessDeleteOpen] =
+    useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [reservationId, setReservationId] = useState();
-  const [error,setError] =useState();
-  const { user, logout } = useUser();
-  const navigate = useNavigate();
+  const [reservationId, setReservationId] = useState(null);
+  const [error, setError] = useState("");
 
   const tabFromUrl = searchParams.get("tab");
 
   const [tab, setTab] = useState(tabFromUrl || "rezerwacje");
 
+  useEffect(() => {
+    const newTab = searchParams.get("tab") || "rezerwacje";
+    setTab(newTab);
+  }, [searchParams]);
+
   if (!user) navigate("/login");
 
-  const changeTab = (tab) => {
-    setTab(tab);
-    setSearchParams({});
+  const handleTopUp = async (amount) => {
+    try {
+      await axios.put(`http://localhost:3000/api/users/${user.id}/topup`, {
+        amount,
+      });
+      fetchUsers();
+    } catch (err) {
+      console.error("Błąd doładowania konta:", err);
+    }
   };
 
-  const handleSeeMore = (room) => {
-    navigate("/oferty/noclegi", {
-      state: { roomId: room, openModal: true },
-    });
+  const changeTab = (newTab) => {
+    setTab(newTab);
+    setSearchParams({});
   };
 
   const fetchReservations = async () => {
     if (!user) return;
-
     try {
       const response = await axios.get(
         `http://localhost:3000/api/reservations/${user.id}`
       );
-      setReservations(Array.isArray(response.data) ? response.data : []);
+      const data = response.data;
+      setReservations({
+        rooms: Array.isArray(data.rooms) ? data.rooms : [],
+        spa: Array.isArray(data.spa) ? data.spa : [],
+      });
     } catch (err) {
       console.error("Błąd pobierania rezerwacji:", err);
-      setReservations([]);
+      setReservations({ rooms: [], spa: [] });
     }
   };
 
@@ -69,6 +85,7 @@ export default function ProfilePage() {
   };
 
   const fetchUsers = async () => {
+    if (!user) return;
     try {
       const res = await axios.get(`http://localhost:3000/users/${user.id}`);
       setUsers(res.data);
@@ -77,10 +94,11 @@ export default function ProfilePage() {
     }
   };
 
-  const handleCancel = async (reservationId) => {
+  const handleCancel = async (reservationId, type) => {
     try {
       await axios.put(
-        `http://localhost:3000/api/reservations/${reservationId}/cancel`
+        `http://localhost:3000/api/reservations/${reservationId}/cancel`,
+        { type }
       );
       fetchReservations();
     } catch (err) {
@@ -90,23 +108,23 @@ export default function ProfilePage() {
 
   const handleDeleteAcc = async () => {
     try {
-      logout();
       await axios.delete(`http://localhost:3000/users/del/${user.id}`);
+      logout();
     } catch (err) {
-      console.error("Błąd przy odwoływaniu rezerwacji:", err);
+      console.error("Błąd przy usuwaniu konta:", err);
     }
   };
 
   const handleChangePassword = async (oldPass, newPass) => {
     try {
-      const res = await axios.put(
+      await axios.put(
         `http://localhost:3000/users/change-password/${user.id}`,
         {
           oldPassword: oldPass,
           newPassword: newPass,
         }
       );
-      setError("Zmiana hasła się powiodła")
+      setError("Zmiana hasła się powiodła");
     } catch (err) {
       if (err.response) {
         setError(err.response.data.message);
@@ -127,6 +145,11 @@ export default function ProfilePage() {
 
     switch (tab) {
       case "rezerwacje":
+        const allReservations = [
+          ...(reservations.rooms || []),
+          ...(reservations.spa || []),
+        ];
+
         return (
           <MotionDiv
             initial={{ opacity: 0, y: 20 }}
@@ -134,18 +157,18 @@ export default function ProfilePage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.4 }}
           >
-            {reservations.length === 0 ? (
+            {allReservations.length === 0 ? (
               <p>Brak rezerwacji</p>
             ) : (
               <ul className="space-y-2">
-                {reservations.map((r) => (
+                {reservations.rooms.map((r) => (
                   <li
-                    key={r.id}
+                    key={`room-${r.id}`}
                     className="border p-3 rounded-lg bg-white shadow-sm flex justify-between items-center"
                   >
                     <div>
                       <p className="font-semibold text-gray-800">
-                        Pokój: {r.room_id} - Kod rezerwacji: {r.reservationCode}
+                        Pokój: {r.name} - Kod rezerwacji: {r.reservationCode}
                       </p>
                       <p className="text-gray-600">
                         Data: {new Date(r.start_date).toLocaleDateString()} —{" "}
@@ -156,6 +179,7 @@ export default function ProfilePage() {
                           onClick={() => {
                             setConfirmDeclineOpen(true);
                             setReservationId(r.id);
+                            setType("room");
                           }}
                           className="cursor-pointer text-white mt-2 px-3 py-1 text-sm bg-red-600 border border-red-600 rounded hover:bg-red-700 transition"
                         >
@@ -166,6 +190,41 @@ export default function ProfilePage() {
                     {r.total_price && (
                       <div className="text-right font-medium text-gray-700">
                         {r.total_price} PLN
+                      </div>
+                    )}
+                  </li>
+                ))}
+
+                {reservations.spa.map((r) => (
+                  <li
+                    key={`spa-${r.id}`}
+                    className="border p-3 rounded-lg bg-white shadow-sm flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-800">
+                        SPA: {r.offerName} ({r.categoryTitle}) - Kod rezerwacji:{" "}
+                        {r.code}
+                      </p>
+                      <p className="text-gray-600">
+                        Data: {new Date(r.date).toLocaleDateString()} — Godzina:{" "}
+                        {r.hour}
+                      </p>
+                      {r.status !== "cancelled" && (
+                        <button
+                          onClick={() => {
+                            setConfirmDeclineOpen(true);
+                            setReservationId(r.id);
+                            setType("spa");
+                          }}
+                          className="cursor-pointer text-white mt-2 px-3 py-1 text-sm bg-red-600 border border-red-600 rounded hover:bg-red-700 transition"
+                        >
+                          Odwołaj
+                        </button>
+                      )}
+                    </div>
+                    {r.price && (
+                      <div className="text-right font-medium text-gray-700">
+                        {r.price} PLN
                       </div>
                     )}
                   </li>
@@ -190,7 +249,7 @@ export default function ProfilePage() {
                 {favorites.map((fav) => (
                   <div
                     key={fav.id}
-                    className=" flex flex-col items-center bg-white rounded-lg shadow p-4"
+                    className="flex flex-col items-center bg-white rounded-lg shadow p-4"
                   >
                     <img
                       src={fav.img}
@@ -210,6 +269,7 @@ export default function ProfilePage() {
             )}
           </MotionDiv>
         );
+
       case "konto":
         return (
           <MotionDiv
@@ -217,35 +277,41 @@ export default function ProfilePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.4 }}
-            className="flex flex-col items-center p-8 rounded-xl shadow-md gap-6 bg-green-50"
+            className="flex flex-col items-center p-8 rounded-xl shadow-md gap-6 bg-green-50 overflow-y-auto "
           >
-            <div className="text-gray-500 mb-4 text-sm uppercase tracking-wide">
+            <div className="text-gray-500 mb-4 text-sm uppercase">
               Twoje aktualne saldo
             </div>
             <div className="text-5xl font-bold text-green-600 flex items-center gap-2">
-              {users.map((user) => (
-                <div key={user.id}>
-                  <p>{user.saldo} </p>
-                </div>
-              ))}{" "}
+              {users.length > 0 &&
+                users.map((u) => (
+                  <div key={u.id}>
+                    <p>{u.saldo}</p>
+                  </div>
+                ))}{" "}
               PLN
             </div>
             <div className="text-gray-600 mt-2 text-center">
               Możesz wykorzystać środki do zakupów na naszej stronie
             </div>
 
-            {/* Przyciski konta w jednej kolumnie */}
+            {/* Przyciski konta */}
             <div className="flex flex-col mt-6 w-full">
               <button
                 className="cursor-pointer w-full py-5 rounded-t bg-white hover:bg-gray-300 transition"
-                onClick={() => setConfirmLogoutOpen(true)}
+                onClick={() => setConfirmMoneyOpen(true)}
               >
-                Wyloguj
+                Doładuj konto
               </button>
+              <MoneyModal
+                isOpen={confirmMoneyOpen}
+                onClose={() => setConfirmMoneyOpen(false)}
+                onTopUp={handleTopUp}
+              />
 
               <div className="flex flex-col gap-4">
                 <button
-                  className="cursor-pointer w-full px-6 py-5 bg-white hover:bg-gray-300 transition "
+                  className="cursor-pointer w-full px-6 py-5 bg-white hover:bg-gray-300 transition"
                   onClick={() => setModalOpen(true)}
                 >
                   Zmień hasło
@@ -256,7 +322,12 @@ export default function ProfilePage() {
                   onChangePassword={handleChangePassword}
                 />
               </div>
-
+              <button
+                className="cursor-pointer w-full py-5 rounded-t bg-white hover:bg-gray-300 transition"
+                onClick={() => setConfirmLogoutOpen(true)}
+              >
+                Wyloguj
+              </button>
               <button
                 className="cursor-pointer w-full px-6 py-5 rounded-b bg-red-600 text-white hover:bg-red-700 transition"
                 onClick={() => setConfirmDeleteOpen(true)}
@@ -273,13 +344,13 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className=" min-h-screen bg-gray-50 flex justify-center py-10 px-4 bg-decor-soft">
+    <div className="min-h-screen bg-gray-50 flex justify-center py-10 px-4 bg-decor-soft">
       {error && <ErrorMessage header="Zmiana hasła" message={error} />}
       <ConfirmDialog
         open={confirmDeclineOpen}
         onConfirm={() => {
           setConfirmDeclineOpen(false);
-          handleCancel(reservationId);
+          handleCancel(reservationId, type);
         }}
         title="Usuń rezerwację"
         message="Czy na pewno chcesz usunąć tę rezerwację?"
@@ -303,9 +374,7 @@ export default function ProfilePage() {
         }}
         title="USUŃ KONTO"
         message="Czy na pewno chcesz usunąć konto?"
-        onCancel={() => {
-          setConfirmDeleteOpen(false);
-        }}
+        onCancel={() => setConfirmDeleteOpen(false)}
       />
       <ConfirmDialog
         open={confirmSurenessDeleteOpen}
@@ -320,7 +389,7 @@ export default function ProfilePage() {
       <div className="mt-20 bg-white shadow-lg rounded-xl w-full max-w-4xl p-6">
         <h1 className="text-center text-3xl font-bold mb-6">Profil</h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           <button
             onClick={() => changeTab("rezerwacje")}
             className={`cursor-pointer text-center py-3 rounded-lg font-medium transition ${

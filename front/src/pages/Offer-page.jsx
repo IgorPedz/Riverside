@@ -17,21 +17,13 @@ export default function OffersPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-8">
+      <section className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-8">
         {/* Noclegi */}
         <CategoryCard
           title="Noclegi"
           img="../public/room-pic-2.jpg"
           desc="Komfortowe pokoje, apartamenty i pakiety pobytowe."
           to="/oferty/noclegi"
-        />
-
-        {/* Restauracja */}
-        <CategoryCard
-          title="Restauracja"
-          img="../public/Restaurant-pic-1.jpg"
-          desc="Wykwintne menu, elegancka atmosfera i wyjątkowe kolacje."
-          to="/oferty/restauracja"
         />
 
         {/* SPA */}

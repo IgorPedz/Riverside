@@ -1,16 +1,118 @@
-# React + Vite
+# Riverside Hotel
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Riverside to nowoczesna aplikacja internetowa dla hotelu, stworzona przy użyciu **Node.js**, **React** i **TailwindCSS**, z backendem w **Express.js** i bazą danych **MySQL**. Strona umożliwia profesjonalne zarządzanie całym hotelem!
+---
 
-Currently, two official plugins are available:
+## Funkcjonalności
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Przeglądanie ofert hotelowych**
+  - Lista pokoi i usług SPA wraz z cenami i godzinami dostępności
+  - Przeglądanie zdjęć i ofert hotelu w czasie rzeczywistym
+  - Filtrowanie i sortowanie po nazwie oraz cenie
+  - Możliwość doładowywania konta w wirualne PLN by móc korzystać z całej zawartości strony
+- **Rezerwacje**
+  - Wybór daty i dostępnych godzin
+  - Blokowanie przeszłych dat oraz zajętych godzin
+  - Przekierowanie do strony rezerwacji z wybranym pokojem/usługą
+  - Płatności oraz możliwość przeglądania w profilu, oraz możliwość ich odwołania
+- **Opinie i oceny**
+  - Możliwość polubiania ofert noclegów
+  - Klienci mogą dodawać swoje opinie dla konkretnych usług
+  - Wyświetlanie wszystkich opinii w szczegółach oferty
+- **Autoryzacja użytkowników**
+  - Logowanie i rejestracja klientów
+  - Możliwość zmiany hasła
+  - Blokowanie nieautoryzowanego dostępu do wszystkich podstron
+- **Responsywny interfejs**
+  - Działa na wszystkich urządzeniach dzięki TailwindCSS
+- **Animacje**
+  - Modalne okna oraz przejścia za pomocą Framer Motion
+ - **Błędy i Walidacja**
+  - Wszystkie błędy są wyświatlane customowo
+  - Aplikacja informuje o błędnych wprowadzanych danych   
+---
 
-## React Compiler
+## Możliwości
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Rezerwacja pokoi i SPA w czasie rzeczywistym
 
-## Expanding the ESLint configuration
+- Automatyczne blokowanie przeszłych dat i zajętych godzin
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Przeglądanie opinii i dodawanie własnych
+
+- Wyszukiwanie i filtrowanie ofert według kategorii i ceny
+
+- Responsywny i nowoczesny design dzięki TailwindCSS
+
+- Animacje i modalne okna z Framer Motion
+
+## Struktura folderów
+
+riverside-hotel/
+│
+├─ server/ # Serwer Node.js / Express
+│ └─ server.js # Punkt wejścia backendu
+│─ public/ # Miejsce wszystkich zdjęć i logotypów strony
+├─ front/ # Aplikacja React
+│ ├─ src/
+├ ├ ├-index.html # rdzeń strony
+│ │ ├─ components/ # Komponenty UI
+│ │ ├─ pages/ # Strony aplikacji (SPA, pokoje, rezerwacje)
+│ │ ├─ contexts/ # Context API (np. UserContext)
+│ │ │─ src/
+│ │ ├  |- App.jsx # Główny komponent aplikacji
+│ │ └  |- index.jsx # Punkt wejścia frontendu
+│ └─ tailwind.config.js # Konfiguracja TailwindCSS
+│
+├─ package.json # Dependencies i skrypty
+└─ README.md
+└─ riverside.sql # plik bazy danych do zaimportowania do mysql
+
+---
+
+## Baza danych MySQL
+
+Strona korzysta z **MySQL** do przechowywania danych m.in o:
+
+- **Users** – dane użytkowników (email, hasło, rola)
+- **Rooms** – pokoje hotelowe z opisem, ceną i zdjęciem
+- **SPA_Offers** – oferty SPA z godzinami i ceną
+- **Reservations** – rezerwacje pokoi i SPA z datą i godziną
+- **Reviews** – opinie klientów powiązane z usługami
+
+- **WAŻNE** - Aby uruchomić stronę trzeba zaimportować bazę danych MySql do phpmyadmina i uruchomić xamppa!
+
+#!/bin/bash
+
+echo "🔥 Riverside — instalacja projektu (frontend + backend + mysql)"
+
+# --- 1. Klonowanie repo ---
+echo " Klonowanie repozytorium..."
+git clone https://github.com/twoje/repo.git
+cd repo || exit
+
+# --- 2. Instalacja FRONTENDU ---
+echo " Instalacja frontendu..."
+cd front || exit
+npm install
+
+echo " Uruchamianie frontendu (port 5173)..."
+npm run dev &
+FRONT_PID=$!
+
+# --- 3. Uruchamianie BACKENDU ---
+
+echo " Uruchamianie backendu (port 3000)..."
+npm run dev &
+BACK_PID=$!
+
+# --- 4. Informacje końcowe ---
+echo ""
+echo " Instalacja zakończona!"
+echo "-------------------------------------------------------"
+echo "Frontend działa na: http://localhost:5173"
+echo "Backend działa na:  http://localhost:3000"
+echo ""
+echo "Aby zatrzymać oba procesy:"
+echo "kill $FRONT_PID $BACK_PID"
+echo "-------------------------------------------------------"

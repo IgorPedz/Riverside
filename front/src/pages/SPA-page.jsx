@@ -19,7 +19,7 @@ export default function Spa() {
   }, []);
 
   return (
-    <section className="mt-10 max-w-10xl mx-auto px-4 py-16 bg-decor-soft">
+    <section className="max-w-10xl mx-auto px-4 py-16 bg-decor-soft">
       <section className="py-20 px-6 md:px-10 max-w-5xl mx-auto text-center relative z-10">
         <div className="grid gap-5 bg-white/100 p-10 round-b shadow-lg text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
           <h1 className="font-display text-6xl font-bold text-center mb-14">
@@ -41,8 +41,7 @@ export default function Spa() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-10">
-        <div></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-10">
         {categories.map((categorie) => (
           <div
             key={categorie.id}

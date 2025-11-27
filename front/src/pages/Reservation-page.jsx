@@ -31,7 +31,6 @@ export default function ReservationPage() {
           `http://localhost:3000/api/rooms/${roomId}`
         );
         setRoom(res.data);
-        console.log(room);
       } catch (err) {
         console.error("Błąd pobierania pokoju:", err);
       }
@@ -57,7 +56,7 @@ export default function ReservationPage() {
   const handlePayment = async () => {
     try {
       await axios.post("http://localhost:3000/api/reservations", {
-        roomId: Number(room.room_id),
+        roomId: Number(room.id),
         userId: Number(user.id),
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],

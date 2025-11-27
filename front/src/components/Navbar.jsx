@@ -75,12 +75,6 @@ export default function Navbar() {
                   Noclegi
                 </Link>
                 <Link
-                  to="/oferty/restauracja"
-                  className="block px-4 py-2 hover:bg-gray-100"
-                >
-                  Restauracja
-                </Link>
-                <Link
                   to="/oferty/spa"
                   className="block px-4 py-2 hover:bg-gray-100"
                 >
@@ -174,7 +168,7 @@ export default function Navbar() {
             {/* Hamburger */}
             <button
               className="flex flex-col justify-center items-center space-y-1 cursor-pointer transition-transform duration-300 z-50"
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() =>{ setMenuOpen(!menuOpen); setProfileOpen(false)}}
             >
               <span
                 className={`w-6 h-0.5 bg-blue-700 transition-all duration-300 ${
@@ -197,7 +191,7 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   className="flex items-center space-x-2 px-4 py-2 text-gray-700 font-medium cursor-pointer"
-                  onClick={() => setProfileOpen(!profileOpen)}
+                  onClick={() => {setProfileOpen(!profileOpen);setMenuOpen(false)}}
                 >
                   <FontAwesomeIcon
                     icon={faUser}
@@ -264,7 +258,7 @@ export default function Navbar() {
         >
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="cursor-pointer text-3xl p-1 bg-white/60 hover:bg-white/70 text-black rounded-b-full shadow-lg transition"
+            className=" cursor-pointer text-3xl p-1 bg-white/60 hover:bg-white/70 text-black rounded-b-full shadow-lg transition"
           >
             {collapsed ? "⮟" : "⮝"}
           </button>
@@ -330,16 +324,6 @@ export default function Navbar() {
                     }}
                   >
                     Noclegi
-                  </Link>
-                  <Link
-                    to="/oferty/restauracja"
-                    className="hover:text-blue-600 transition"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setOffersOpen(false);
-                    }}
-                  >
-                    Restauracja
                   </Link>
                   <Link
                     to="/oferty/spa"

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import logo from "../public/logo.png";
-import { useUser } from "../contexts/UserContext.jsx";
+import logo from "/logo.png";
+import { useUser } from "../contexts/UserContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
