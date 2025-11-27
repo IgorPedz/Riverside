@@ -48,27 +48,25 @@ Riverside to nowoczesna aplikacja internetowa dla hotelu, stworzona przy użyciu
 
 ## Struktura folderów
 
+```
 riverside-hotel/
-│
-├─ server/ # Serwer Node.js / Express
-│ └─ server.js # Punkt wejścia backendu
-│─ public/ # Miejsce wszystkich zdjęć i logotypów strony
-├─ front/ # Aplikacja React
-│ ├─ src/
-├ ├ ├-index.html # rdzeń strony
-│ │ ├─ components/ # Komponenty UI
-│ │ ├─ pages/ # Strony aplikacji (SPA, pokoje, rezerwacje)
-│ │ ├─ contexts/ # Context API (np. UserContext)
-│ │ │─ src/
-│ │ ├  |- App.jsx # Główny komponent aplikacji
-│ │ └  |- index.jsx # Punkt wejścia frontendu
-│ └─ tailwind.config.js # Konfiguracja TailwindCSS
-│
-├─ package.json # Dependencies i skrypty
-└─ README.md
-└─ riverside.sql # plik bazy danych do zaimportowania do mysql
+  ├─ server/               # Serwer Node.js / Express
+  │  └─ server.js          # Punkt wejścia backendu
+  ├─ public/               # Miejsce wszystkich zdjęć i logotypów strony
+  ├─ front/                # Aplikacja React
+  │  ├─ src/
+  │  │  ├─ components/     # Komponenty UI
+  │  │  ├─ pages/          # Strony aplikacji (SPA, pokoje, rezerwacje)
+  │  │  ├─ contexts/       # Context API (np. UserContext)
+  │  │  ├─ App.jsx         # Główny komponent aplikacji
+  │  │  └─ index.jsx       # Punkt wejścia frontendu
+  │  ├─ index.html         # Rdzeń strony
+  │  └─ tailwind.config.js # Konfiguracja TailwindCSS
+  ├─ package.json          # Dependencies i skrypty
+  ├─ README.md
+  └─ riverside.sql         # Plik bazy danych do zaimportowania do MySQL
+```
 
----
 
 ## Baza danych MySQL
 
