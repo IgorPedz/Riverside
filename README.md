@@ -104,14 +104,10 @@ BACK_PID=$!
 ```
 # --- 4. Informacje końcowe ---
 ```
-echo ""
-echo "-------------------------------------------------------"
-echo " Instalacja zakończona!"
-echo "-------------------------------------------------------"
-echo "Frontend działa na: http://localhost:5173"
-echo "Backend działa na: http://localhost:3000"
-echo ""
-echo "Aby zatrzymać oba procesy:"
-echo "kill $FRONT_PID $BACK_PID"
-echo "-------------------------------------------------------"
+Frontend działa na: http://localhost:5173
+Backend działa na: http://localhost:3000
+
+Aby zatrzymać oba procesy:
+kill $FRONT_PID $BACK_PID
+
 ```
