@@ -1,7 +1,12 @@
 # Riverside Hotel
 
 Riverside to nowoczesna aplikacja internetowa dla hotelu, stworzona przy użyciu **Node.js**, **React** i **TailwindCSS**, z backendem w **Express.js** i bazą danych **MySQL**. Strona umożliwia profesjonalne zarządzanie całym hotelem!
----
+
+## Wymagania
+  - nodejs
+  - xampp z bazą mysql
+  - react ver.18
+  - pobrane zależności z package.json
 
 ## Funkcjonalności
 
@@ -87,27 +92,24 @@ Strona korzysta z **MySQL** do przechowywania danych m.in o:
 # --- 1. Klonowanie repo ---
 ```
 git clone https://github.com/IgorPedz/Riverside.git
-cd repo || exit
+cd Riverside
 ```
 # --- 2. Instalacja FRONTENDU ---
 ```
 cd front || exit
 npm install
-npm run dev &
-FRONT_PID=$!
+npm run dev 
+
 ```
+W drugim cmd
 # --- 3. Uruchamianie BACKENDU ---
 ```
-echo " Uruchamianie backendu (port 3000)..."
-npm run dev &
-BACK_PID=$!
+cd server
+node server.js
 ```
 # --- 4. Informacje końcowe ---
 ```
 Frontend działa na: http://localhost:5173
 Backend działa na: http://localhost:3000
-
-Aby zatrzymać oba procesy:
-kill $FRONT_PID $BACK_PID
 
 ```
