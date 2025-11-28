@@ -124,15 +124,15 @@ app.get("/spa", async (req, res) => {
 
 //Pobieranie danych o 1 zabiegu SPA
 app.get("/spa/:offerId", async (req, res) => {
-  const { offerId } = req.params; 
+  const { offerId } = req.params;
   const connection = await mysql.createConnection(dbConfig);
 
-    let cateId = null;
-    let id = offerId;
+  let cateId = null;
+  let id = offerId;
 
-    const parts = id.split("-");
-    cateId = parts[0]; 
-    id = parts[1]; 
+  const parts = id.split("-");
+  cateId = parts[0];
+  id = parts[1];
 
   try {
     const [items] = await connection.execute(
@@ -571,11 +571,11 @@ app.get("/api/reservations/spa/:id", async (req, res) => {
   const { id } = req.params;
 
   let cateId = null;
-  let offerId = id; 
+  let offerId = id;
 
-    const parts = id.split("-");
-    cateId = parts[0]; 
-    offerId = parts[1]; 
+  const parts = id.split("-");
+  cateId = parts[0];
+  offerId = parts[1];
 
   const connection = await mysql.createConnection(dbConfig);
   try {
@@ -642,16 +642,23 @@ app.post("/api/spa/reservations", async (req, res) => {
   const { spaOfferId, categoryId, userId, date, hour, price, code } = req.body;
 
   try {
+    // Pobierz saldo użytkownika
     const [user] = await connection.execute(
       "SELECT saldo FROM users WHERE id = ?",
       [userId]
     );
 
-    if (!user[0] || user[0].saldo < price) {
+    if (!user[0]) {
+      await connection.end();
+      return res.status(404).json({ error: "Użytkownik nie istnieje" });
+    }
+
+    if (user[0].saldo < price) {
       await connection.end();
       return res.status(400).json({ error: "Niewystarczające saldo" });
     }
 
+    // Zapisz rezerwację
     const [result] = await connection.execute(
       `INSERT INTO reservations_spa
        (offer_id, category_id, user_id, date, hour, price, code)
@@ -659,19 +666,22 @@ app.post("/api/spa/reservations", async (req, res) => {
       [spaOfferId, categoryId, userId, date, hour, price, code]
     );
 
-    // Aktualizacja salda użytkownika
-    await connection.execute(
-      `UPDATE users SET saldo = saldo - ? WHERE id = ?`,
-      [price, userId]
-    );
+    // Aktualizuj saldo użytkownika
+    const newSaldo = user[0].saldo - price;
+    await connection.execute("UPDATE users SET saldo = ? WHERE id = ?", [
+      newSaldo,
+      userId,
+    ]);
 
     await connection.end();
 
     res.json({
       message: "Rezerwacja SPA zapisana, saldo zaktualizowane",
       reservationId: result.insertId,
+      saldo: newSaldo,
     });
   } catch (err) {
+    await connection.end();
     console.error("Błąd przy zapisywaniu rezerwacji SPA:", err);
     res.status(500).json({ error: err.message });
   }

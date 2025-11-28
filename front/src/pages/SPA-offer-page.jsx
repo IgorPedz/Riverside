@@ -196,7 +196,7 @@ export default function SpaOffers() {
               <p className="text-gray-600 mb-2">Godziny: {offer.hours}</p>
 
               <p className="font-semibold mb-3">
-                {offer.price ? `Cena: ${offer.price}` : "W cenie wejścia"}
+                {offer.price ? `Cena: ${offer.price} PLN` : "W cenie wejścia"}
               </p>
 
               <div className="flex gap-2">

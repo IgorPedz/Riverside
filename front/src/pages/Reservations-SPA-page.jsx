@@ -60,7 +60,7 @@ export default function SpaReservationPage() {
       navigate("/", { state: { reservationSuccess: true } });
     } catch (err) {
       console.error("Błąd przy tworzeniu rezerwacji SPA:", err);
-      setError("Nie udało się zarezerwować oferty.");
+      setError("Za mało środków na koncie!");
     }
   };
 
