@@ -48,27 +48,25 @@ Riverside to nowoczesna aplikacja internetowa dla hotelu, stworzona przy użyciu
 
 ## Struktura folderów
 
+```
 riverside-hotel/
-│
-├─ server/ # Serwer Node.js / Express
-│ └─ server.js # Punkt wejścia backendu
-│─ public/ # Miejsce wszystkich zdjęć i logotypów strony
-├─ front/ # Aplikacja React
-│ ├─ src/
-├ ├ ├-index.html # rdzeń strony
-│ │ ├─ components/ # Komponenty UI
-│ │ ├─ pages/ # Strony aplikacji (SPA, pokoje, rezerwacje)
-│ │ ├─ contexts/ # Context API (np. UserContext)
-│ │ │─ src/
-│ │ ├  |- App.jsx # Główny komponent aplikacji
-│ │ └  |- index.jsx # Punkt wejścia frontendu
-│ └─ tailwind.config.js # Konfiguracja TailwindCSS
-│
-├─ package.json # Dependencies i skrypty
-└─ README.md
-└─ riverside.sql # plik bazy danych do zaimportowania do mysql
+  ├─ server/               # Serwer Node.js / Express
+  │  └─ server.js          # Punkt wejścia backendu
+  ├─ public/               # Miejsce wszystkich zdjęć i logotypów strony
+  ├─ front/                # Aplikacja React
+  │  ├─ src/
+  │  │  ├─ components/     # Komponenty UI
+  │  │  ├─ pages/          # Strony aplikacji (SPA, pokoje, rezerwacje)
+  │  │  ├─ contexts/       # Context API (np. UserContext)
+  │  │  ├─ App.jsx         # Główny komponent aplikacji
+  │  │  └─ index.jsx       # Punkt wejścia frontendu
+  │  ├─ index.html         # Rdzeń strony
+  │  └─ tailwind.config.js # Konfiguracja TailwindCSS
+  ├─ package.json          # Dependencies i skrypty
+  ├─ README.md
+  └─ riverside.sql         # Plik bazy danych do zaimportowania do MySQL
+```
 
----
 
 ## Baza danych MySQL
 
@@ -82,37 +80,34 @@ Strona korzysta z **MySQL** do przechowywania danych m.in o:
 
 - **WAŻNE** - Aby uruchomić stronę trzeba zaimportować bazę danych MySql do phpmyadmina i uruchomić xamppa!
 
-#!/bin/bash
 
-echo "🔥 Riverside — instalacja projektu (frontend + backend + mysql)"
+
+##🔥 Riverside — instalacja projektu (frontend + backend + mysql)"
 
 # --- 1. Klonowanie repo ---
-echo " Klonowanie repozytorium..."
-git clone https://github.com/twoje/repo.git
+```
+git clone https://github.com/IgorPedz/Riverside.git
 cd repo || exit
-
+```
 # --- 2. Instalacja FRONTENDU ---
-echo " Instalacja frontendu..."
+```
 cd front || exit
 npm install
-
-echo " Uruchamianie frontendu (port 5173)..."
 npm run dev &
 FRONT_PID=$!
-
+```
 # --- 3. Uruchamianie BACKENDU ---
-
+```
 echo " Uruchamianie backendu (port 3000)..."
 npm run dev &
 BACK_PID=$!
-
+```
 # --- 4. Informacje końcowe ---
-echo ""
-echo " Instalacja zakończona!"
-echo "-------------------------------------------------------"
-echo "Frontend działa na: http://localhost:5173"
-echo "Backend działa na:  http://localhost:3000"
-echo ""
-echo "Aby zatrzymać oba procesy:"
-echo "kill $FRONT_PID $BACK_PID"
-echo "-------------------------------------------------------"
+```
+Frontend działa na: http://localhost:5173
+Backend działa na: http://localhost:3000
+
+Aby zatrzymać oba procesy:
+kill $FRONT_PID $BACK_PID
+
+```
