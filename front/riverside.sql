@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Lis 28, 2025 at 12:34 AM
+-- Generation Time: Lis 28, 2025 at 01:16 AM
 -- Wersja serwera: 10.4.32-MariaDB
 -- Wersja PHP: 8.2.12
 
@@ -63,7 +63,8 @@ CREATE TABLE `favourites` (
 
 INSERT INTO `favourites` (`id`, `fav_id`, `user_id`) VALUES
 (2, 6, 4),
-(8, 3, 6);
+(8, 3, 6),
+(12, 2, 7);
 
 -- --------------------------------------------------------
 
@@ -163,7 +164,8 @@ CREATE TABLE `reservations` (
 --
 
 INSERT INTO `reservations` (`id`, `room_id`, `user_id`, `start_date`, `end_date`, `status`, `created_at`, `updated_at`, `total_price`, `reservationCode`) VALUES
-(54, 6, 6, '2025-11-27', '2025-11-30', 'pending', '2025-11-27 23:17:31', '2025-11-27 23:17:31', 1050, 215576779112);
+(54, 6, 6, '2025-11-27', '2025-11-30', 'pending', '2025-11-27 23:17:31', '2025-11-27 23:17:31', 1050, 215576779112),
+(56, 6, 7, '2025-11-27', '2025-11-28', 'pending', '2025-11-28 00:07:29', '2025-11-28 00:07:29', 350, 595612138566);
 
 -- --------------------------------------------------------
 
@@ -182,6 +184,15 @@ CREATE TABLE `reservations_spa` (
   `code` int(11) NOT NULL,
   `created_at` date NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `reservations_spa`
+--
+
+INSERT INTO `reservations_spa` (`id`, `offer_id`, `category_id`, `user_id`, `date`, `hour`, `price`, `code`, `created_at`) VALUES
+(35, 8, 2, 6, '2025-11-27', 9, 100, 2147483647, '2025-11-28'),
+(36, 8, 2, 6, '2025-11-27', 11, 100, 2147483647, '2025-11-28'),
+(42, 8, 2, 7, '2025-11-27', 19, 100, 2147483647, '2025-11-28');
 
 -- --------------------------------------------------------
 
@@ -203,12 +214,12 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `name`, `price`, `img`, `short_desc`, `long_desc`) VALUES
-(1, 'Pokój Standard', '200', '../public/room-pic-1.jpg', 'Przytulny pokój standardowy', 'Pokój standardowy z łóżkiem podwójnym, biurkiem i łazienką.'),
-(2, 'Pokój Deluxe', '350', '../public/room-pic-2.jpg', 'Komfortowy pokój deluxe', 'Pokój deluxe z widokiem na morze, dużym łóżkiem i przestronną łazienką.'),
-(3, 'Pokój Rodzinny', '400', '../public/room-pic-3.jpg', 'Pokój dla całej rodziny', 'Przestronny pokój rodzinny z dwoma łóżkami i sofą dla dzieci.'),
-(4, 'Apartament Junior', '500', '../public/room-pic-4.jpg', 'Elegancki apartament', 'Apartament Junior z salonem, dużym łóżkiem i balkonem.'),
-(5, 'Apartament VIP', '700', '../public/room-pic-5.jpg', 'Luksusowy apartament VIP', 'Apartament VIP z widokiem na panoramę miasta, dużym salonem i jacuzzi.'),
-(6, 'Pokój Deluxe', '450', '../public/room-pic-6.jpg', 'Komfortowy pokój deluxe z widokiem na rzekę i balkonem.', 'Pokój Deluxe oferuje przestronne wnętrze, łóżko king-size, klimatyzację, minibar, Wi-Fi, oraz luksusową łazienkę z wanną i prysznicem.');
+(1, 'Pokój Standard', '200', '/room-pic-1.jpg', 'Przytulny pokój standardowy', 'Pokój standardowy z łóżkiem podwójnym, biurkiem i łazienką.'),
+(2, 'Pokój Deluxe', '350', '/room-pic-2.jpg', 'Komfortowy pokój deluxe', 'Pokój deluxe z widokiem na morze, dużym łóżkiem i przestronną łazienką.'),
+(3, 'Pokój Rodzinny', '400', '/room-pic-3.jpg', 'Pokój dla całej rodziny', 'Przestronny pokój rodzinny z dwoma łóżkami i sofą dla dzieci.'),
+(4, 'Apartament Junior', '500', '/room-pic-4.jpg', 'Elegancki apartament', 'Apartament Junior z salonem, dużym łóżkiem i balkonem.'),
+(5, 'Apartament VIP', '700', '/room-pic-5.jpg', 'Luksusowy apartament VIP', 'Apartament VIP z widokiem na panoramę miasta, dużym salonem i jacuzzi.'),
+(6, 'Pokój Deluxe', '450', '/room-pic-6.jpg', 'Komfortowy pokój deluxe z widokiem na rzekę i balkonem.', 'Pokój Deluxe oferuje przestronne wnętrze, łóżko king-size, klimatyzację, minibar, Wi-Fi, oraz luksusową łazienkę z wanną i prysznicem.');
 
 -- --------------------------------------------------------
 
@@ -314,18 +325,18 @@ CREATE TABLE `spa_offer_items` (
 --
 
 INSERT INTO `spa_offer_items` (`id`, `category_id`, `name`, `price`) VALUES
-(1, 1, 'Masaż klasyczny', '150 zł'),
-(2, 1, 'Masaż aromaterapeutyczny', '180 zł'),
-(3, 1, 'Masaż gorącymi kamieniami', '220 zł'),
-(4, 1, 'Masaż luksusowy 90 min', '320 zł'),
-(5, 2, 'Sauna sucha', '250 zl'),
-(6, 2, 'Sauna parowa', '250 zl'),
-(7, 2, 'Sauna infrared', '150 zl'),
-(8, 2, 'Tężnia solankowa', '100 zl'),
-(9, 3, 'Oczyszczanie wodorowe', '240 zł'),
-(10, 3, 'Zabieg liftingujący', '320 zł'),
-(11, 3, 'Terapia nawilżająca', '190 zł'),
-(12, 3, 'Pielęgnacja premium', '390 zł');
+(1, 1, 'Masaż klasyczny', '150 '),
+(2, 1, 'Masaż aromaterapeutyczny', '180 '),
+(3, 1, 'Masaż gorącymi kamieniami', '220 '),
+(4, 1, 'Masaż luksusowy 90 min', '320 '),
+(5, 2, 'Sauna sucha', '250 '),
+(6, 2, 'Sauna parowa', '250 '),
+(7, 2, 'Sauna infrared', '150 '),
+(8, 2, 'Tężnia solankowa', '100 '),
+(9, 3, 'Oczyszczanie wodorowe', '240 '),
+(10, 3, 'Zabieg liftingujący', '320 '),
+(11, 3, 'Terapia nawilżająca', '190 '),
+(12, 3, 'Pielęgnacja premium', '390 ');
 
 -- --------------------------------------------------------
 
@@ -351,7 +362,7 @@ INSERT INTO `spa_reviews` (`id`, `spa_offer_id`, `category_id`, `user_name`, `co
 (4, 3, 3, 'Igor', 'rt', '2025-11-27'),
 (8, 3, 3, 'Igor', 'w', '2025-11-27'),
 (13, 9, 3, 'Igor', 'ew', '2025-11-27'),
-(14, 8, 2, 'Igor', 'rtsre', '2025-11-27'),
+(14, 8, 2, 'Igor', 'Super strona :)', '2025-11-27'),
 (15, 11, 3, 'Igor', 'ibyhunj', '2025-11-27');
 
 -- --------------------------------------------------------
@@ -376,7 +387,8 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `imie`, `email`, `haslo`, `is_admin`, `saldo`) VALUES
 (1, 'igor', 'pedziwilk@gmail.com', '$2b$10$Ks0S3v64qJO5wL5yB63Sc.XoyGL6X2B9/JnjWM7gDh2UdwcgLhbOy', 0, 0),
 (3, 'igorigor', 'admin1@wp.pl', '$2b$10$/BaWIGccJkUrDJkNEP65febfmgbyRLJG8rwSqAkklWFwgaknUDdyK', 0, 0),
-(6, 'Igor', 'igorrpedziwilk@gmail.com', '$2b$10$c0V4LidxQJQ72xXTWhsPluPztW4kfUXcg24kniuIRN4y2iTC2/0Im', 0, 7450);
+(6, 'Igor', 'igorrpedziwilk@gmail.com', '$2b$10$c0V4LidxQJQ72xXTWhsPluPztW4kfUXcg24kniuIRN4y2iTC2/0Im', 0, 7250),
+(7, 'test', 'test@wp.pl', '$2b$10$RBDAdO0tSzQjpz9fftZWCOXUB4VCWrykicSxTUBSuZQ0CjRoWqURO', 0, 70);
 
 --
 -- Indeksy dla zrzutów tabel
@@ -493,7 +505,7 @@ ALTER TABLE `amenities`
 -- AUTO_INCREMENT for table `favourites`
 --
 ALTER TABLE `favourites`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `gallery`
@@ -517,13 +529,13 @@ ALTER TABLE `meal_items`
 -- AUTO_INCREMENT for table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT for table `reservations_spa`
 --
 ALTER TABLE `reservations_spa`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `rooms`
@@ -571,7 +583,7 @@ ALTER TABLE `spa_reviews`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
